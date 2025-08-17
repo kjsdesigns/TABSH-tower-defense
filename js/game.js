@@ -24,6 +24,9 @@ export class Game {
     // Use centralized state management - SET THIS FIRST!
     this.gameState = gameState;
     
+    // Reset game state for new game
+    this.gameState.resetGame();
+    
     this.levelData = null;
     this.backgroundImg = null;
     this.paths = [];

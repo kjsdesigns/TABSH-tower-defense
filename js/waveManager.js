@@ -63,9 +63,15 @@ export class WaveManager {
       });
     }
 
-    // Start a new wave if needed
+    // Start a new wave if needed  
     if (!this.waveActive && this.waveIndex < this.waves.length) {
+      const oldTime = this.timeUntilNextWave;
       this.timeUntilNextWave -= deltaSec;
+      
+      // Debug the countdown
+      if (Math.floor(oldTime) !== Math.floor(this.timeUntilNextWave)) {
+        console.log(`Wave countdown: ${Math.ceil(this.timeUntilNextWave)}`);
+      }
       
       if (this.timeUntilNextWave <= 0) {
         console.log(`Starting wave ${this.waveIndex+1} of ${this.waves.length}`);

@@ -27,8 +27,14 @@ window.startGameFromMainScreen = function() {
 };
 
 async function startGameWithGold(startingGold) {
-  if (window.game && window.game.waveManager) {
-    window.game.waveManager.clearAllTimers();
+  // Clear existing game instance completely
+  if (window.game) {
+    console.log('Clearing existing game instance');
+    if (window.game.waveManager) {
+      window.game.waveManager.clearAllTimers();
+    }
+    // Clear from global reference
+    window.game = null;
   }
 
   lastStartingGold = startingGold;

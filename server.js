@@ -88,6 +88,22 @@ app.get('/api/getConfig', (req, res) => {
   });
 });
 
+// Handle client-side routing - serve index.html for all routes
+app.get('*', (req, res) => {
+  // Skip API routes and static assets
+  if (req.path.startsWith('/api/') || 
+      req.path.includes('.') || 
+      req.path.startsWith('/assets/') ||
+      req.path.startsWith('/js/') ||
+      req.path.startsWith('/css/') ||
+      req.path.startsWith('/config/')) {
+    return; // Let static middleware handle it
+  }
+  
+  // Serve index.html for all other routes (client-side routing)
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.listen(PORT, function () {
   console.log("Server listening on port " + PORT);
 });
