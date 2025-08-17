@@ -5,14 +5,14 @@ export class WaveManager {
     this.game = game;
     this.waveIndex = 0;
     this.waveActive = false;
-    this.timeUntilNextWave = 0;
+    this.timeUntilNextWave = 2.0; // Start first wave after 2 seconds
     this.waves = [];
   }
 
   clearAllTimers() {
     this.waveIndex = 0;
     this.waveActive = false;
-    this.timeUntilNextWave = 0;
+    this.timeUntilNextWave = 2.0; // Reset to initial delay
     this.waves.forEach(w => {
       w.enemyGroups.forEach(g => {
         g.spawnedCount = 0;
@@ -45,8 +45,8 @@ export class WaveManager {
 
   update(deltaSec) {
     // Skip updates if game is over or not started
-    if (this.game.gameOver) return;
-    if (!this.game.gameStarted) return;
+    if (this.game.gameState.get('gameOver')) return;
+    if (!this.game.gameState.get('gameStarted')) return;
 
     // Debug counter to limit log spam
     if (!this._debugCounter) this._debugCounter = 0;
@@ -126,15 +126,8 @@ export class WaveManager {
       }
 
       try {
-        // Check if wave done: all spawned + no enemies remain
-        if (!waveInfo || !waveInfo.enemyGroups) return;
-        
-        const allSpawned = waveInfo.enemyGroups.every(g => {
-          if (!g) return true; // Skip invalid groups
-          return (g.spawnedCount >= g.count);
-        });
-        
-        if (allSpawned && this.game.enemies.length === 0) {
+        // Check if wave is complete using the new method
+        if (this.checkWaveCompletion()) {
           console.log(`Wave ${this.waveIndex+1} completed!`);
           
           // wave finished
@@ -244,5 +237,51 @@ export class WaveManager {
     if (!this.waveActive && this.waveIndex < this.waves.length) {
       this.startWave(this.waveIndex);
     }
+  }
+  
+  getCurrentWave() {
+    if (this.waveIndex < this.waves.length) {
+      return this.waves[this.waveIndex];
+    }
+    return null;
+  }
+  
+  getCurrentWaveEnemyStats() {
+    const currentWave = this.getCurrentWave();
+    if (!currentWave || !currentWave.enemyGroups) {
+      return { total: 0, remaining: 0, spawned: 0 };
+    }
+    
+    let total = 0;
+    let spawned = 0;
+    
+    // Calculate total enemies for this wave
+    currentWave.enemyGroups.forEach(group => {
+      total += group.count || 0;
+      spawned += group.spawnedCount || 0;
+    });
+    
+    // Count remaining enemies on the map from this wave
+    // Note: This is an approximation - ideally we'd track which enemies belong to which wave
+    const remaining = this.game.enemies.length;
+    
+    return { total, remaining, spawned };
+  }
+  
+  checkWaveCompletion() {
+    if (!this.waveActive) return false;
+    
+    const currentWave = this.getCurrentWave();
+    if (!currentWave || !currentWave.enemyGroups) return true;
+    
+    // Check if all enemies in this wave have been spawned
+    const allSpawned = currentWave.enemyGroups.every(group => {
+      return (group.spawnedCount || 0) >= (group.count || 0);
+    });
+    
+    // Check if no enemies remain on the map
+    const noEnemiesRemaining = this.game.enemies.length === 0;
+    
+    return allSpawned && noEnemiesRemaining;
   }
 }

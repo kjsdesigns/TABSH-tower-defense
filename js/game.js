@@ -219,12 +219,7 @@ export class Game {
         this.ctx.arc(s.x,s.y,20,0,Math.PI*2);
         this.ctx.fill();
       });
-      if(this.heroStart) {
-        this.ctx.fillStyle="red";
-        this.ctx.beginPath();
-        this.ctx.arc(this.heroStart.x,this.heroStart.y,10,0,Math.PI*2);
-        this.ctx.fill();
-      }
+      // heroStart position removed - no longer needed visually
     }
 
     // draw enemies
@@ -237,13 +232,31 @@ export class Game {
     this.heroManager.draw(this.ctx);
 
     this.ctx.fillStyle = "white";
-    this.ctx.fillText(`Gold: ${this.gold}`, 10, 50);
+    this.ctx.fillText(`Gold: ${this.gameState.get('gold')}`, 10, 50);
     this.ctx.fillText(`Wave: ${this.waveManager.waveIndex+1}/${this.waveManager.waves.length}`, 10, 70);
-    this.ctx.fillText(`Lives: ${this.lives}/${this.maxLives}`, 10, 90);
+    this.ctx.fillText(`Lives: ${this.gameState.get('lives')}/${this.gameState.get('maxLives')}`, 10, 90);
+    
+    // Show enemy count for current wave
+    const currentWave = this.waveManager.getCurrentWave();
+    if (currentWave) {
+      const enemyStats = this.waveManager.getCurrentWaveEnemyStats();
+      this.ctx.fillText(`Enemies: ${enemyStats.remaining}/${enemyStats.total}`, 10, 110);
+    }
+    
+    // Show countdown timer when waiting for next wave
     if (!this.waveManager.waveActive &&
         this.waveManager.waveIndex < this.waveManager.waves.length &&
-        this.gameStarted) {
-      this.ctx.fillText("Next wave is ready", 10, 110);
+        this.gameState.get('gameStarted') &&
+        this.enemies.length === 0) {
+      
+      const timeRemaining = this.waveManager.timeUntilNextWave;
+      if (timeRemaining > 0) {
+        const countdownSeconds = Math.ceil(timeRemaining);
+        this.ctx.fillStyle = "yellow";
+        this.ctx.font = "16px Arial";
+        this.ctx.fillText(`Next wave starts in ${countdownSeconds}`, 10, 130);
+        this.ctx.font = "12px Arial"; // Reset font
+      }
     }
   }
   

@@ -121,7 +121,7 @@ export const level1Data = {
     }
   ],
   "levelName": "Forest Path",
-  "music": "",
+  "music": "cute.mp3",
   "waves": [
     {
       "enemyGroups": [

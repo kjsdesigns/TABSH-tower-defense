@@ -327,6 +327,15 @@ export class UIManager {
         this.refreshUpgradeTowerDialog();
       }
     };
+    
+    // Only show gather point button for barracks towers
+    if (this.gatherBtn) {
+      if (tower.type === 'barracks tower') {
+        this.gatherBtn.style.display = 'block';
+      } else {
+        this.gatherBtn.style.display = 'none';
+      }
+    }
   }
 
   getTowerAt(mx,my){

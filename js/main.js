@@ -137,6 +137,17 @@ async function startGameWithGold(startingGold) {
   const heroX = game.heroStart ? game.heroStart.x : 100;
   const heroY = game.heroStart ? game.heroStart.y : 100;
   
+  // Auto-select melee hero if no hero is selected
+  if (!chosenHero) {
+    console.log("No hero selected, auto-selecting melee hero");
+    chosenHero = "melee";
+    
+    // Save the auto-selection
+    const slotData = rawSlotData ? JSON.parse(rawSlotData) : { currentStars: {}, selectedHero: null };
+    slotData.selectedHero = "melee";
+    localStorage.setItem("kr_slot" + activeSlotIndex, JSON.stringify(slotData));
+  }
+  
   if (chosenHero === "melee") {
     game.heroManager.addHero({
       name: "Knight Hero",
