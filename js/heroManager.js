@@ -40,6 +40,11 @@ export class Hero extends MeleeActor {
     // Register with melee combat system
     meleeCombatSystem.registerMeleeUnit(this);
     
+    // Death and respawn properties
+    this.respawnTime = 5.0; // 5 seconds to respawn
+    this.respawnTimer = 0;
+    this.deathPosition = null; // Where the hero died
+    
     console.log(`Hero ${this.name} created and registered with movement and combat systems`);
   }
   
@@ -63,8 +68,52 @@ export class Hero extends MeleeActor {
   }
 
   update(deltaSec, game) {
-    super.updateMelee(deltaSec, game);
+    if (this.dead) {
+      // Handle respawn timer
+      this.respawnTimer -= deltaSec;
+      if (this.respawnTimer <= 0) {
+        this.respawn();
+      }
+    } else {
+      // Check for death FIRST
+      if (this.hp <= 0) {
+        this.die();
+        return;
+      }
+      
+      super.updateMelee(deltaSec, game);
+    }
     // Movement and combat are handled by MovementSystem and MeleeCombatSystem
+  }
+  
+  die() {
+    console.log(`Hero ${this.name} has died at (${this.x}, ${this.y})`);
+    this.dead = true;
+    this.deathPosition = { x: this.x, y: this.y };
+    this.respawnTimer = this.respawnTime;
+    
+    // Disengage from combat
+    if (this.isEngaged && meleeCombatSystem.disengageUnit) {
+      meleeCombatSystem.disengageUnit(this);
+    }
+  }
+  
+  respawn() {
+    console.log(`Hero ${this.name} respawning at death location`);
+    this.dead = false;
+    this.hp = this.maxHp;
+    this.respawnTimer = 0;
+    
+    // Respawn at death location
+    if (this.deathPosition) {
+      this.x = this.deathPosition.x;
+      this.y = this.deathPosition.y;
+    }
+    
+    // Return to gather point
+    if (this.gatherX && this.gatherY) {
+      meleeCombatSystem.setGatherPoint(this, this.gatherX, this.gatherY);
+    }
   }
 
   setGatherPoint(x, y) {
@@ -82,10 +131,18 @@ export class Hero extends MeleeActor {
 
   drawHero(ctx, isSelected) {
     if (this.dead) {
-      ctx.fillStyle = "grey";
+      // Draw respawn timer
+      ctx.fillStyle = "rgba(128, 128, 128, 0.7)";
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Draw respawn countdown
+      ctx.fillStyle = "white";
+      ctx.font = "14px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(Math.ceil(this.respawnTimer).toString(), this.x, this.y + 5);
+      
       if (isSelected) {
         ctx.strokeStyle = "white";
         ctx.lineWidth = 3;
@@ -122,6 +179,11 @@ export class Hero extends MeleeActor {
       ctx.stroke();
     }
 
+    // Draw health bar if not at full health
+    if (this.hp < this.maxHp) {
+      this.drawHealthBar(ctx);
+    }
+
     // Draw movement target if moving
     if (movementSystem.isMoving(this)) {
       const target = movementSystem.getTarget(this);
@@ -145,6 +207,29 @@ export class Hero extends MeleeActor {
         ctx.restore();
       }
     }
+  }
+  
+  drawHealthBar(ctx) {
+    const barWidth = this.radius * 2.5;
+    const barHeight = 6;
+    const offsetY = this.radius + 12;
+    
+    const barX = this.x - barWidth / 2;
+    const barY = this.y - offsetY;
+    
+    // Background (red)
+    ctx.fillStyle = "#cc0000";
+    ctx.fillRect(barX, barY, barWidth, barHeight);
+    
+    // Health (green)
+    const healthPercent = this.hp / this.maxHp;
+    ctx.fillStyle = "#00cc00";
+    ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+    
+    // Border
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX, barY, barWidth, barHeight);
   }
 
   // Clean up when hero is removed
@@ -184,9 +269,8 @@ export class HeroManager {
 
   update(deltaSec) {
     this.heroes.forEach(hero => {
-      if (!hero.dead) {
-        hero.update(deltaSec, this.game);
-      }
+      // Update ALL heroes, including dead ones (for respawn timer)
+      hero.update(deltaSec, this.game);
     });
   }
 

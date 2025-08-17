@@ -20,8 +20,9 @@ class Soldier extends MeleeActor {
       isMelee: true,
       speed: config.speed || 50,
     });
-    this.respawnTime = config.respawnTime || 10;
+    this.respawnTime = 5.0; // 5 seconds like heroes
     this.respawnTimer = 0;
+    this.sourceTower = null; // Tower that created this soldier
 
     // We'll store an index for soldier's position inside the group
     this.indexInGroup = config.indexInGroup || 0;
@@ -53,27 +54,68 @@ class Soldier extends MeleeActor {
     if (this.dead) {
       this.respawnTimer -= deltaSec;
       if (this.respawnTimer <= 0) {
-        this.dead = false;
-        this.hp = this.maxHp;
-        console.log(`Soldier ${this.name} respawned`);
+        this.respawn();
       }
     } else {
+      // Check for death FIRST
+      if (this.hp <= 0) {
+        this.die();
+        return;
+      }
+      
       super.updateMelee(deltaSec, game);
-      // Movement is now handled by MovementSystem
+    }
+    // Movement is now handled by MovementSystem
+  }
+  
+  die() {
+    console.log(`Soldier ${this.name} has died`);
+    this.dead = true;
+    this.respawnTimer = this.respawnTime;
+    
+    // Disengage from combat
+    if (this.isEngaged && meleeCombatSystem.disengageUnit) {
+      meleeCombatSystem.disengageUnit(this);
+    }
+  }
+  
+  respawn() {
+    console.log(`Soldier ${this.name} respawning from tower`);
+    this.dead = false;
+    this.hp = this.maxHp;
+    this.respawnTimer = 0;
+    
+    // Respawn at source tower location
+    if (this.sourceTower) {
+      this.x = this.sourceTower.x + (Math.random() - 0.5) * 20;
+      this.y = this.sourceTower.y + (Math.random() - 0.5) * 20;
+    }
+    
+    // Return to previous gather point
+    if (this.gatherX && this.gatherY) {
+      meleeCombatSystem.setGatherPoint(this, this.gatherX, this.gatherY);
     }
   }
 
   drawSoldier(ctx) {
     if (this.dead) {
+      // Draw respawn timer
       ctx.fillStyle = "rgba(128, 128, 128, 0.5)";
-    } else {
-      ctx.fillStyle = "darkred";
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Draw respawn countdown
+      ctx.fillStyle = "white";
+      ctx.font = "10px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(Math.ceil(this.respawnTimer).toString(), this.x, this.y + 3);
+      
+      return;
     }
     
     // Draw soldier image if available, otherwise use colored circle
     if (this.image && this.image instanceof HTMLImageElement) {
-      const alpha = this.dead ? 0.5 : 1.0;
-      ctx.globalAlpha = alpha;
       ctx.drawImage(
         this.image,
         this.x - this.radius,
@@ -81,12 +123,40 @@ class Soldier extends MeleeActor {
         this.radius * 2,
         this.radius * 2
       );
-      ctx.globalAlpha = 1.0;
     } else {
+      ctx.fillStyle = "darkred";
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fill();
     }
+    
+    // Draw health bar if not at full health
+    if (this.hp < this.maxHp) {
+      this.drawHealthBar(ctx);
+    }
+  }
+  
+  drawHealthBar(ctx) {
+    const barWidth = this.radius * 2;
+    const barHeight = 4;
+    const offsetY = this.radius + 8;
+    
+    const barX = this.x - barWidth / 2;
+    const barY = this.y - offsetY;
+    
+    // Background (red)
+    ctx.fillStyle = "#cc0000";
+    ctx.fillRect(barX, barY, barWidth, barHeight);
+    
+    // Health (green)
+    const healthPercent = this.hp / this.maxHp;
+    ctx.fillStyle = "#00cc00";
+    ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+    
+    // Border
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX, barY, barWidth, barHeight);
   }
 
   setGatherPoint(x, y) {
@@ -123,10 +193,13 @@ export class TowerUnitGroup {
         damage: config.damage || 10,
         attackInterval: config.attackInterval || 1.5,
         speed: config.speed || 50,
-        respawnTime: config.respawnTime || 10,
         indexInGroup: i,
         groupSize: numUnits
       });
+      
+      // Set source tower for respawning
+      soldier.sourceTower = tower;
+      
       this.soldiers.push(soldier);
     }
   }
