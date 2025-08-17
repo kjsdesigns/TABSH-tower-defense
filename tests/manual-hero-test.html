@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hero Movement Manual Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+        }
+        .test-step {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+        }
+        .test-result {
+            font-weight: bold;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hero Movement Manual Test Instructions</h1>
+    
+    <div class="test-step">
+        <h3>Test 1: Hero Movement Before Game Start</h3>
+        <ol>
+            <li>Load the game at <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></li>
+            <li>Select a hero type and click Level 1</li>
+            <li>Verify the "Start" button is visible, indicating game hasn't started</li>
+            <li>Click on the hero to select it (it should highlight)</li>
+            <li>Click somewhere else on the map</li>
+            <li>The hero should start moving to the clicked location</li>
+        </ol>
+        <div class="test-result">
+            Expected: Hero moves to clicked location, even though game hasn't started.
+        </div>
+    </div>
+    
+    <div class="test-step">
+        <h3>Test 2: Hero Deselection After Destination Set</h3>
+        <ol>
+            <li>After Test 1, click on the hero again to select it</li>
+            <li>Click somewhere else on the map</li>
+            <li>The hero should no longer be highlighted (deselected)</li>
+        </ol>
+        <div class="test-result">
+            Expected: Hero is automatically deselected after setting movement destination.
+        </div>
+    </div>
+    
+    <div class="test-step">
+        <h3>Test 3: Hero Continues Moving After Deselection</h3>
+        <ol>
+            <li>Click on the hero to select it</li>
+            <li>Click on a far location on the map</li>
+            <li>Observe the hero for several seconds</li>
+        </ol>
+        <div class="test-result">
+            Expected: Hero continues moving toward destination even after being deselected.
+        </div>
+    </div>
+    
+    <h2>If Any Test Fails:</h2>
+    <p>Check the browser console (F12) for error messages.</p>
+    <p>Look for logs about movement and gather points:</p>
+    <ul>
+        <li><code>Canvas click at:</code> - Shows where you clicked</li>
+        <li><code>Setting gather point for hero</code> - Should show when you click to move</li>
+        <li><code>Hero moved X units</code> - Shows movement progress</li>
+    </ul>
+</body>
+</html>

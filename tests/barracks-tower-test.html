@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barracks Tower Unit Formation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .results {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            overflow: auto;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Barracks Tower Unit Formation Test</h1>
+    <p>This page tests the barracks tower unit formation in the TABSH game.</p>
+    
+    <div>
+        <button id="testTriangleFormation" class="test-button">Test Triangle Formation</button>
+        <button id="testPathPlacement" class="test-button">Test Path Placement</button>
+        <button id="visualizeFormation" class="test-button">Visualize Formation</button>
+    </div>
+    
+    <h2>Results:</h2>
+    <div id="results" class="results"></div>
+    
+    <canvas id="formationCanvas" width="300" height="300" style="display: none;"></canvas>
+    
+    <script>
+        // Helper to log to the results div
+        function log(message, isError = false) {
+            const resultsDiv = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const formattedMessage = `[${timestamp}] ${message}`;
+            
+            if (isError) {
+                resultsDiv.innerHTML += `<div style="color: red;">${formattedMessage}</div>`;
+            } else {
+                resultsDiv.innerHTML += `<div>${formattedMessage}</div>`;
+            }
+            
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        // Test Triangle Formation
+        document.getElementById('testTriangleFormation').addEventListener('click', async () => {
+            log('Testing triangle formation...');
+            try {
+                // Check the computeUnitOffsets function
+                const response = await fetch('http://localhost:3000/js/unitManager.js');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                log(`Loaded unitManager.js (${text.length} bytes)`);
+                
+                // Look for the function definition
+                if (text.includes('computeUnitOffsets')) {
+                    log('✅ Found computeUnitOffsets function');
+                    
+                    // Check if it's using triangle formation
+                    if (text.includes('triangle') || text.includes('circular')) {
+                        log('✅ Function description mentions triangle/circular formation');
+                    } else {
+                        log('❓ Function description doesn\'t explicitly mention triangle/circular formation');
+                    }
+                    
+                    // Check for angle calculation (indicating circular positioning)
+                    if (text.includes('Math.cos') || text.includes('Math.sin')) {
+                        log('✅ Function uses trigonometric functions for circular positioning');
+                    } else {
+                        log('❌ Function doesn\'t use trigonometric functions for positioning', true);
+                    }
+                    
+                    // Check for x,y object return
+                    if (text.includes('{x:') || text.includes('{x, y}') || text.includes('x:') && text.includes('y:')) {
+                        log('✅ Function returns x,y coordinate objects');
+                    } else {
+                        log('❌ Function may not return x,y coordinate objects', true);
+                    }
+                } else {
+                    log('❌ Could not find computeUnitOffsets function', true);
+                }
+                
+                // Check TowerUnitGroup implementation
+                if (text.includes('applyOffsetsToUnits')) {
+                    log('✅ Found applyOffsetsToUnits method');
+                    
+                    // Check if it applies both x and y offsets
+                    const applyMethodSource = text.match(/applyOffsetsToUnits\(\)\s*{[\s\S]*?}/);
+                    if (applyMethodSource) {
+                        const methodCode = applyMethodSource[0];
+                        
+                        if (methodCode.includes('offset.x') && methodCode.includes('offset.y')) {
+                            log('✅ Method applies both x and y offsets');
+                        } else if (methodCode.includes('offX') && methodCode.includes('offY')) {
+                            log('✅ Method applies both x and y offsets (using offX/offY variables)');
+                        } else {
+                            log('❌ Method may not apply both x and y offsets', true);
+                        }
+                    }
+                } else {
+                    log('❌ Could not find applyOffsetsToUnits method', true);
+                }
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Test Path Placement
+        document.getElementById('testPathPlacement').addEventListener('click', async () => {
+            log('Testing path placement...');
+            try {
+                // Load towerManager.js to check the initial placement code
+                const response = await fetch('http://localhost:3000/js/towerManager.js');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                log(`Loaded towerManager.js (${text.length} bytes)`);
+                
+                // Check for key methods
+                if (text.includes('createBarracksUnits')) {
+                    log('✅ Found createBarracksUnits method');
+                    
+                    // Check if it uses getClosestPointOnPaths
+                    if (text.includes('getClosestPointOnPaths')) {
+                        log('✅ Method uses getClosestPointOnPaths for placement');
+                    } else {
+                        log('❌ Method does not use getClosestPointOnPaths for placement', true);
+                    }
+                    
+                    // Check if it sets the rally point
+                    if (text.includes('setRallyPoint')) {
+                        log('✅ Method calls setRallyPoint to position units');
+                    } else {
+                        log('❌ Method does not call setRallyPoint', true);
+                    }
+                } else {
+                    log('❌ Could not find createBarracksUnits method', true);
+                }
+                
+                // Check path finding methods
+                if (text.includes('getClosestPointOnPaths')) {
+                    log('✅ Found getClosestPointOnPaths method');
+                    
+                    // Check if it finds the closest point on any path segment
+                    if (text.includes('getClosestPointOnSegment')) {
+                        log('✅ Method uses getClosestPointOnSegment to find the closest point');
+                    } else {
+                        log('❌ Method does not use getClosestPointOnSegment', true);
+                    }
+                } else {
+                    log('❌ Could not find getClosestPointOnPaths method', true);
+                }
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Visualize Formation
+        document.getElementById('visualizeFormation').addEventListener('click', () => {
+            log('Visualizing unit formations...');
+            const canvas = document.getElementById('formationCanvas');
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Center point
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Draw background grid
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= canvas.width; i += 20) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            // Draw center point
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Helper function to compute offsets (copied from game logic)
+            function computeUnitOffsets(count, formationRadius = 15) {
+                // If only 1 unit, no offset needed
+                if (count <= 1) return [{x: 0, y: 0}];
+                
+                // For 2 units, position them horizontally
+                if (count === 2) {
+                    return [
+                        {x: -formationRadius, y: 0},
+                        {x: formationRadius, y: 0}
+                    ];
+                }
+                
+                // For 3 or more units, create a triangle/circular formation
+                const offsets = [];
+                const angleStep = (2 * Math.PI) / count;
+                
+                for (let i = 0; i < count; i++) {
+                    // Calculate position on a circle
+                    const angle = i * angleStep - Math.PI/2;
+                    const x = Math.round(formationRadius * Math.cos(angle));
+                    const y = Math.round(formationRadius * Math.sin(angle));
+                    offsets.push({x, y});
+                }
+                
+                return offsets;
+            }
+            
+            // Visualize formations for different unit counts
+            const formations = [
+                { count: 1, radius: 15, color: 'blue', offsetY: -80 },
+                { count: 2, radius: 15, color: 'green', offsetY: 0 },
+                { count: 3, radius: 15, color: 'purple', offsetY: 80 }
+            ];
+            
+            formations.forEach(formation => {
+                const offsets = computeUnitOffsets(formation.count, formation.radius);
+                
+                // Draw formation label
+                ctx.fillStyle = 'black';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${formation.count} unit${formation.count > 1 ? 's' : ''}`, centerX, centerY + formation.offsetY - 30);
+                
+                // Draw units
+                ctx.fillStyle = formation.color;
+                offsets.forEach(offset => {
+                    ctx.beginPath();
+                    ctx.arc(
+                        centerX + offset.x, 
+                        centerY + formation.offsetY + offset.y, 
+                        8, 0, Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    // Draw line from center to unit
+                    ctx.strokeStyle = formation.color;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY + formation.offsetY);
+                    ctx.lineTo(centerX + offset.x, centerY + formation.offsetY + offset.y);
+                    ctx.stroke();
+                });
+            });
+            
+            log('✅ Visualized 1, 2, and 3 unit formations');
+        });
+    </script>
+</body>
+</html>

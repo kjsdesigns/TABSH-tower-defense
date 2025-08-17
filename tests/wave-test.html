@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level 1 Wave Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .results {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            overflow: auto;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Level 1 Wave Test</h1>
+    <p>This page helps test and debug level 1 wave functionality in the TABSH game.</p>
+    
+    <div>
+        <button id="testWaveStructure" class="test-button">Test Wave Structure</button>
+        <button id="testEnemySpawning" class="test-button">Test Enemy Spawning</button>
+        <button id="runFullTest" class="test-button">Run Full Test</button>
+    </div>
+    
+    <h2>Results:</h2>
+    <div id="results" class="results"></div>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Make sure the game server is running (<code>node server.js</code>)</li>
+        <li>Open this page in your browser</li>
+        <li>Click the buttons above to run different tests</li>
+        <li>Check the Results section for test output</li>
+    </ol>
+    
+    <script>
+        // Helper to log to the results div
+        function log(message, isError = false) {
+            const resultsDiv = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const formattedMessage = `[${timestamp}] ${message}`;
+            
+            if (isError) {
+                resultsDiv.innerHTML += `<div style="color: red;">${formattedMessage}</div>`;
+            } else {
+                resultsDiv.innerHTML += `<div>${formattedMessage}</div>`;
+            }
+            
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        // Test Wave Structure
+        document.getElementById('testWaveStructure').addEventListener('click', async () => {
+            log('Testing wave structure...');
+            try {
+                const response = await fetch('http://localhost:3000/config/maps/level1.js');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                log(`Loaded level1.js (${text.length} bytes)`);
+                
+                // Basic check for waves array
+                if (text.includes('"waves":')) {
+                    log('✅ Found "waves" in level1.js');
+                } else {
+                    log('❌ No "waves" found in level1.js', true);
+                }
+                
+                // Extract and parse waves if possible
+                try {
+                    const wavesMatch = text.match(/"waves":\s*(\[[\s\S]*?\])\s*(?:,|\})/);
+                    if (wavesMatch && wavesMatch[1]) {
+                        // This is a somewhat hacky way to evaluate the waves content
+                        // We're essentially converting the JS object to a proper JSON
+                        const wavesText = wavesMatch[1]
+                            .replace(/([{,])\s*(\w+):/g, '$1"$2":') // Add quotes to keys
+                            .replace(/'/g, '"'); // Replace single quotes with double quotes
+                            
+                        try {
+                            const waves = JSON.parse(wavesText);
+                            log(`✅ Successfully parsed waves: ${waves.length} waves found`);
+                            
+                            // Check each wave
+                            waves.forEach((wave, i) => {
+                                if (!wave.enemyGroups) {
+                                    log(`❌ Wave ${i+1} is missing enemyGroups`, true);
+                                } else {
+                                    log(`✅ Wave ${i+1}: ${wave.enemyGroups.length} enemy groups`);
+                                    
+                                    // Check each enemy group
+                                    wave.enemyGroups.forEach((group, j) => {
+                                        if (!group.type) {
+                                            log(`❌ Wave ${i+1}, Group ${j+1}: Missing enemy type`, true);
+                                        } else {
+                                            log(`✅ Wave ${i+1}, Group ${j+1}: ${group.count}x ${group.type}`);
+                                        }
+                                    });
+                                }
+                            });
+                        } catch (jsonError) {
+                            log(`❌ Error parsing waves JSON: ${jsonError.message}`, true);
+                        }
+                    } else {
+                        log('❌ Could not extract waves array for testing', true);
+                    }
+                } catch (extractError) {
+                    log(`❌ Error extracting waves: ${extractError.message}`, true);
+                }
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Test Enemy Spawning
+        document.getElementById('testEnemySpawning').addEventListener('click', async () => {
+            log('Testing enemy spawning...');
+            try {
+                // Create an iframe with the game
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '800px';
+                iframe.style.height = '600px';
+                iframe.style.display = 'none'; // Hide the iframe
+                iframe.src = 'http://localhost:3000';
+                document.body.appendChild(iframe);
+                
+                log('Loading game in iframe...');
+                
+                // Wait for the iframe to load
+                iframe.onload = () => {
+                    log('Game loaded in iframe, waiting for initialization...');
+                    
+                    // Check for game initialization
+                    const checkInterval = setInterval(() => {
+                        try {
+                            const game = iframe.contentWindow.game;
+                            if (game && game.waveManager) {
+                                clearInterval(checkInterval);
+                                log('✅ Game initialized successfully');
+                                
+                                // Check wave data
+                                const waves = game.waveManager.waves;
+                                log(`Wave count: ${waves.length}`);
+                                
+                                if (waves.length === 0) {
+                                    log('❌ No waves loaded in game', true);
+                                    return;
+                                }
+                                
+                                // Try to start the game
+                                log('Starting game...');
+                                game.gameStarted = true;
+                                
+                                // Check for enemy spawning
+                                let checkCount = 0;
+                                const enemyCheck = setInterval(() => {
+                                    checkCount++;
+                                    const enemyCount = game.enemies.length;
+                                    log(`Enemies: ${enemyCount}`);
+                                    
+                                    if (enemyCount > 0) {
+                                        clearInterval(enemyCheck);
+                                        log(`✅ Enemies spawned: ${enemyCount}`);
+                                        
+                                        // Show some details about the enemies
+                                        game.enemies.forEach((enemy, i) => {
+                                            log(`Enemy ${i+1}: ${enemy.name}, HP: ${enemy.hp}`);
+                                        });
+                                    }
+                                    
+                                    // Give up after 10 attempts (about 10 seconds)
+                                    if (checkCount >= 10) {
+                                        clearInterval(enemyCheck);
+                                        log('❌ No enemies spawned after 10 seconds', true);
+                                        
+                                        // Try to manually spawn an enemy
+                                        log('Attempting to manually spawn an enemy...');
+                                        try {
+                                            game.enemyManager.spawnEnemy("drone", 1, 0);
+                                            setTimeout(() => {
+                                                const manualEnemyCount = game.enemies.length;
+                                                if (manualEnemyCount > 0) {
+                                                    log(`✅ Manually spawned enemies: ${manualEnemyCount}`);
+                                                } else {
+                                                    log('❌ Failed to manually spawn enemies', true);
+                                                }
+                                            }, 500);
+                                        } catch (spawnError) {
+                                            log(`❌ Error spawning enemy manually: ${spawnError.message}`, true);
+                                        }
+                                    }
+                                }, 1000);
+                            }
+                        } catch (error) {
+                            log(`Error checking game: ${error.message}`, true);
+                        }
+                    }, 1000);
+                    
+                    // Give up after 10 seconds
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        log('❌ Game initialization timeout', true);
+                    }, 10000);
+                };
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Run Full Test
+        document.getElementById('runFullTest').addEventListener('click', () => {
+            log('Running full test sequence...');
+            
+            // First test wave structure
+            document.getElementById('testWaveStructure').click();
+            
+            // Then test enemy spawning after a delay
+            setTimeout(() => {
+                document.getElementById('testEnemySpawning').click();
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

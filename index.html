@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="css/devTempStyle.css">
+<meta charset="UTF-8">
+<title>My Tower Defense</title>
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<!--
+Moved editorHub.js so it's loaded before mainScreen.js and main.js,
+ensuring showEditorHub/hideEditorHub are defined.
+-->
+<script type="module" src="./js/editors/editorHub.js"></script>
+<script type="module" src="./js/mainScreen.js"></script>
+<script type="module" src="./js/main.js"></script>
+</head>
+<body>
+<!-- MAIN SCREEN -->
+<div id="mainScreen">
+<div id="slotButtonsContainer"></div>
+<div id="currentSlotLabel"></div>
+<div id="selectedHeroLabel"></div>
+<div style="margin-top:30px;">
+<button id="level1Btn" class="levelButton" style="position:absolute; top:200px; left:140px;">
+L1
+</button>
+<div id="level1StarDisplay" style="position:absolute; top:330px; left:140px; color:#ff0;"></div>
+
+<div id="dottedLine" style="
+position: absolute;
+width: 100px;
+height: 2px;
+background: repeating-linear-gradient(to right, #fff 0, #fff 10px, transparent 10px, transparent 20px);
+top: 250px;
+left: 230px;
+transform: rotate(10deg);
+transform-origin: 0 0;
+opacity: 0.3;">
+</div>
+
+<button id="level2Btn" class="levelButton" style="position:absolute; top:220px; left:320px;">
+L2
+</button>
+<div id="level2StarDisplay" style="position:absolute; top:350px; left:320px; color:#ff0;"></div>
+
+<div id="dottedLine2to3" style="
+position: absolute;
+width: 100px;
+height: 2px;
+background: repeating-linear-gradient(to right, #fff 0, #fff 10px, transparent 10px, transparent 20px);
+top: 250px;
+left: 410px;
+transform: rotate(10deg);
+transform-origin: 0 0;
+opacity: 0.3;">
+</div>
+
+<button id="level3Btn" class="levelButton" style="position:absolute; top:220px; left:500px;">
+L3
+</button>
+<div id="level3StarDisplay" style="position:absolute; top:350px; left:500px; color:#ff0;"></div>
+
+<div id="dottedLine3to4" style="
+position: absolute;
+width: 100px;
+height: 2px;
+background: repeating-linear-gradient(to right, #fff 0, #fff 10px, transparent 10px, transparent 20px);
+top: 250px;
+left: 590px;
+transform: rotate(10deg);
+transform-origin: 0 0;
+opacity: 0.3;">
+</div>
+
+<button id="level4Btn" class="levelButton" style="position:absolute; top:220px; left:680px;">
+L4
+</button>
+<div id="level4StarDisplay" style="position:absolute; top:350px; left:680px; color:#ff0;"></div>
+</div>
+<!-- BOTTOM-RIGHT Placeholders -->
+<div id="bottomRightButtons" style="position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px;">
+<!-- Add "Level Editor" button above Tower Upgrades -->
+<button id="levelEditorButton" class="placeholderBtn">Game Editor</button>
+
+<button id="upgradeButton" class="placeholderBtn">Tower Upgrades</button>
+<button id="heroesButton" class="placeholderBtn">Heroes</button>
+<button id="itemsButton" class="placeholderBtn">Items</button>
+<!-- New info section under Items button -->
+<div id="updateInfo" style="color:#ccc; margin-top:4px; font-size:0.8em;"></div>
+</div>
+
+<!-- Hero Selection Dialog (hidden) -->
+<div id="heroDialog" style="
+display: none;
+position: fixed;
+top: 50%;
+left: 50%;
+width: 400px;
+background: rgba(0,0,0,0.85);
+border: 2px solid #999;
+border-radius: 8px;
+transform: translate(-50%, -50%);
+z-index: 9999;
+padding: 10px;">
+<div id="heroDialogClose" style="float: right; cursor: pointer; margin-bottom: 10px;">&#10006;</div>
+<h2>Select Your Hero</h2>
+<div class="heroChoice">
+<button id="meleeHeroBtn">Melee Hero</button>
+</div>
+<div class="heroChoice">
+<button id="archerHeroBtn">Archer Hero</button>
+</div>
+</div>
+</div>
+
+<!-- The Editor Hub screen -->
+<div id="editorHub" style="display: none; position: relative; width: 100%; height: 100vh; background: #111; color: #fff;">
+
+<!--
+New flex container at top:
+- Left side: tab buttons
+- Right side: "Back to Main"
+-->
+<div id="editorHubHeader" style="display: flex; align-items: center; justify-content: space-between; margin: 8px;">
+<div class="editorTabButtons">
+<button class="editorTabButton" data-target="levelEditorTab">Level Editor</button>
+<button class="editorTabButton" data-target="enemyEditorTab">Enemy Editor</button>
+<button class="editorTabButton" data-target="towerEditorTab">Tower Editor</button>
+<button class="editorTabButton" data-target="heroEditorTab">Hero Editor</button>
+</div>
+<button id="editorBackToMainBtn" style="cursor:pointer;">Back to Main</button>
+</div>
+
+<div id="levelEditorTab" class="editorTabContent">
+<!-- Level Editor content (populated dynamically) -->
+</div>
+<div id="enemyEditorTab" class="editorTabContent">
+<h2>Enemy Editor (Placeholder)</h2>
+</div>
+<div id="towerEditorTab" class="editorTabContent">
+<h2>Tower Editor (Placeholder)</h2>
+</div>
+<div id="heroEditorTab" class="editorTabContent">
+<h2>Hero Editor (Placeholder)</h2>
+</div>
+</div>
+
+<!-- GAME SCREEN (hidden by default) -->
+<div id="gameContainer" style="display:none; position:relative;">
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<div id="topButtons" style="
+position: absolute;
+top: 10px;
+right: 10px;
+display: flex;
+gap: 6px;">
+<button id="speedToggleButton" class="actionButton">1x</button>
+<button id="gameControlButton" class="actionButton">Start</button>
+<button id="settingsButton" class="actionButton">&#9881;</button>
+</div>
+</div>
+
+<!-- Enemy stats UI (bottom-left) -->
+<div id="enemyStats" style="
+display: none;
+position: absolute;
+bottom: 10px;
+left: 10px;
+background: rgba(0,0,0,0.7);
+padding: 6px;
+border: 1px solid #999;
+border-radius: 3px;">
+<img id="enemyImage" src="" alt="enemy" style="max-width:80px; max-height:80px;">
+<div><strong id="enemyName">Name</strong></div>
+<div>HP: <span id="enemyHp"></span></div>
+<div>Speed: <span id="enemySpeed"></span></div>
+<div>Gold on Kill: <span id="enemyGold"></span></div>
+</div>
+
+<div id="towerSelectPanel" style="
+display:none;
+position:absolute;
+background: rgba(0,0,0,0.8);
+border: 1px solid #999;
+border-radius: 3px;
+padding: 5px;
+color: #fff;">
+</div>
+
+<div id="settingsDialog" style="
+display: none;
+position: fixed;
+top: 50%;
+left: 50%;
+width: 600px;
+background: rgba(0,0,0,0.85);
+border: 2px solid #999;
+border-radius: 8px;
+transform: translate(-50%, -50%);
+z-index: 9999;
+padding: 10px;">
+<div id="settingsDialogClose" style="float: right; cursor: pointer; margin-bottom: 10px;">&#10006;</div>
+<h2 id="settingsHeading">Settings</h2>
+<div id="settingsDialogContent" style="display:flex; flex-direction:row; gap:15px;">
+<!-- LEFT column -->
+<div id="settingsLeftColumn" style="width:50%; box-sizing:border-box;">
+<div id="currentGameLabel" class="smallInfoLabel"></div>
+<button id="toggleDebugBtn" style="margin: 5px 0;">Hide Debug</button>
+<hr style="margin:6px 0;" />
+<div id="enemyHpRow">
+<label id="enemyHpLabel">Enemy HP</label>
+<div id="enemyHpSegment"></div>
+</div>
+<div id="startingGoldRow">
+<label id="startingGoldLabel" for="startingGoldInput">Starting gold</label>
+<input type="number" id="startingGoldInput" value="1000" />
+</div>
+<button id="restartGameButton" class="actionButton" style="margin-top: 10px;">
+Restart Game
+</button>
+<!-- Back to Main button -->
+<button id="backToMainButton" class="actionButton" style="margin-top: 10px;">
+Back to Main
+</button>
+<hr />
+<!-- Sound Settings -->
+<h4>Sound Settings</h4>
+<div>
+<label>Music On <input type="checkbox" id="musicOnCheckbox" checked /></label>
+<input type="range" id="musicVolumeSlider" min="0" max="100" value="100" />
+</div>
+<div>
+<label>SFX On <input type="checkbox" id="sfxOnCheckbox" checked /></label>
+<input type="range" id="sfxVolumeSlider" min="0" max="100" value="100" />
+</div>
+</div>
+
+<!-- RIGHT column: tower stats table -->
+<div id="settingsRightColumn" style="width:50%; box-sizing:border-box;">
+<div id="debugTableContainer" style="margin-top:0; font-size:0.75em;">
+<table id="debugTable" style="
+border-collapse: collapse;
+border: 1px solid #999;
+width: 100%;
+"></table>
+</div>
+</div>
+</div>
+</div>
+
+<div id="loseMessage" style="
+display:none;
+text-align:center;
+font-family:sans-serif;
+margin-top:20px;
+position:fixed;
+top:40%;
+left:50%;
+transform:translate(-50%,-50%);
+background: rgba(0,0,0,0.85);
+border:2px solid #999;
+padding:20px;
+border-radius:8px;
+z-index:9999;">
+<h1 style="font-size:3em; margin:0;">You lost</h1>
+<div style="font-size:6em;">X</div>
+<div style="margin-top:10px;">
+<button id="loseRestartBtn" class="actionButton" style="margin-right:10px;">Restart</button>
+<button id="loseSettingsBtn" class="actionButton" style="margin-right:10px;">Settings</button>
+<button id="loseMainBtn" class="actionButton">Back to main</button>
+</div>
+</div>
+
+<div id="winMessage" style="
+display:none;
+text-align:center;
+font-family:sans-serif;
+margin-top:20px;
+position:fixed;
+top:40%;
+left:50%;
+transform:translate(-50%,-50%);
+background: rgba(0,0,0,0.85);
+border:2px solid #999;
+padding:20px;
+border-radius:8px;
+z-index:9999;">
+<h1 style="font-size:3em; margin:0;">You win!</h1>
+<div id="winStars" style="font-size:4em; color:gold; margin-top:10px;"></div>
+<div style="margin-top:10px;">
+<button id="winRestartBtn" class="actionButton" style="margin-right:10px;">Restart</button>
+<button id="winSettingsBtn" class="actionButton" style="margin-right:10px;">Settings</button>
+<button id="winMainBtn" class="actionButton">Back to main</button>
+</div>
+</div>
+
+<!-- TOWER BUILD DIALOG -->
+<div id="towerBuildDialog" style="
+display: none;
+position: absolute;
+background: rgba(0,0,0,0.85);
+border: 2px solid #999;
+border-radius: 8px;
+z-index: 10000;
+padding: 10px;
+color: #fff;">
+<div id="towerBuildClose" style="float: right; cursor: pointer; margin-bottom: 6px;">&#10006;</div>
+<!-- (header removed earlier) -->
+<div id="towerBuildOptions" style="display: flex; flex-direction: row; gap: 15px;">
+<!-- Populated dynamically -->
+</div>
+</div>
+
+<!-- TOWER UPGRADE DIALOG -->
+<div id="towerUpgradeDialog" style="
+display: none;
+position: absolute;
+background: rgba(0,0,0,0.85);
+border: 2px solid #999;
+border-radius: 8px;
+z-index: 10000;
+padding: 10px;
+color: #fff;
+display: flex;
+flex-direction: column;
+gap: 8px; /* so each button stacks vertically with spacing */
+">
+<div id="towerUpgradeClose" style="align-self: flex-end; cursor: pointer; margin-bottom: 6px;">&#10006;</div>
+<h2 id="towerUpgradeTitle">Tower L1</h2>
+<button id="towerSellBtn">Sell Tower</button>
+<button id="towerGatherBtn">Set Gather Point</button>
+<button id="towerUpgradeBtn">Upgrade $50</button>
+</div>
+
+<script type="module">
+document.addEventListener("DOMContentLoaded", () => {
+// Example logic for hooking up "editorBackToMainBtn"
+const btn = document.getElementById("editorBackToMainBtn");
+if (btn) {
+btn.addEventListener("click", () => {
+if (window.hideEditorHub) {
+window.hideEditorHub();
+}
+});
+}
+});
+</script>
+</body>
+</html>
+
+
