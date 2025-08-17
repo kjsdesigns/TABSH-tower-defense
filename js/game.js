@@ -4,7 +4,9 @@ import { WaveManager }  from "./waveManager.js";
 import { HeroManager }  from "./heroManager.js";
 import { ProjectileManager } from "./utils/projectileManager.js";
 import { soundManager } from "./soundManager.js";
-import { gatherController } from "./utils/gatherController.js";
+import { gameState } from "./core/GameState.js";
+import { movementSystem } from "./core/MovementSystem.js";
+import { assetManager } from "./core/AssetManager.js";
 
 export class Game {
   constructor(
@@ -18,24 +20,14 @@ export class Game {
     this.width = canvas.width;
     this.height = canvas.height;
 
-    this.gold = 200;
-    this.lives = 20;
-    this.maxLives = 20;
-
-    this.speedOptions = [1, 2, 4, 0.5];
-    this.speedIndex = 0;
-    this.gameSpeed = this.speedOptions[this.speedIndex];
-
-    this.gameStarted = false;
-    this.paused = false;
-
+    // Use centralized state management - SET THIS FIRST!
+    this.gameState = gameState;
+    
     this.levelData = null;
     this.backgroundImg = null;
     this.paths = [];
     this.towerSpots = [];
     this.enemies = [];
-
-    this.globalEnemyHpMultiplier = 1.0;
 
     this.enemyManager = new EnemyManager(this);
     this.towerManager = new TowerManager(this);
@@ -44,45 +36,22 @@ export class Game {
     this.projectileManager = new ProjectileManager(this); 
 
     this.lastTime = 0;
-    this.debugMode = false;
+    
+    // Initialize error handling
+    this.errorHandler = this.setupErrorHandling();
+    
+    console.log("Game initialized with new core systems");
 
-    // Set up gatherController
-    console.log("Initializing gatherController...");
-    const gcInstance = gatherController.init(this);
-    console.log("gatherController initialized:", !!gcInstance);
-
-    // Speed/pause UI
-    const speedBtn = document.getElementById("speedToggleButton");
-    if (speedBtn) {
-      speedBtn.addEventListener("click", () => {
-        this.speedIndex = (this.speedIndex + 1) % this.speedOptions.length;
-        this.gameSpeed = this.speedOptions[this.speedIndex];
-        speedBtn.textContent = `${this.gameSpeed}x`;
-      });
-    }
-    const gcBtn = document.getElementById("gameControlButton");
-    if (gcBtn) {
-      gcBtn.addEventListener("click", () => {
-        if (!this.gameStarted) {
-          this.gameStarted = true;
-          this.paused = false;
-          gcBtn.textContent = "Pause";
-        } else if (!this.paused) {
-          this.paused = true;
-          gcBtn.textContent = "Resume";
-        } else {
-          this.paused = false;
-          gcBtn.textContent = "Pause";
-        }
-      });
-    }
-
+    this.setupUI();
     this.canvas.addEventListener("click", (e) => this.handleCanvasClick(e));
   }
 
-  setLevelData(data, bgImg) {
+  async setLevelData(data, bgImg) {
     this.levelData = data;
     this.backgroundImg = bgImg;
+    
+    // Use centralized state
+    this.gameState.setLevel(data.levelName || 'Unknown Level', data, bgImg);
 
     if (data && data.music) {
       soundManager.playMusic("assets/sounds/" + data.music);
@@ -109,6 +78,72 @@ export class Game {
     }
 
     this.waveManager.loadWavesFromLevel(data);
+    
+    // Preload level assets
+    try {
+      await assetManager.preloadLevel(data);
+      console.log('Level assets preloaded successfully');
+    } catch (error) {
+      console.warn('Failed to preload some level assets:', error);
+    }
+  }
+  
+  setupErrorHandling() {
+    window.addEventListener('error', (event) => {
+      console.error('Game Error:', event.error);
+      this.handleGameError(event.error);
+    });
+    
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled Promise Rejection:', event.reason);
+      this.handleGameError(event.reason);
+    });
+  }
+  
+  handleGameError(error) {
+    // Graceful error handling
+    if (this.gameState.get('gameStarted')) {
+      this.gameState.set('paused', true);
+    }
+    
+    // Show user-friendly error message
+    const errorMsg = `Game Error: ${error.message || 'An unexpected error occurred'}`;
+    console.error(errorMsg);
+    
+    // Could show an error dialog here in the future
+  }
+  
+  setupUI() {
+    // Speed/pause UI with state management
+    const speedBtn = document.getElementById("speedToggleButton");
+    if (speedBtn) {
+      speedBtn.addEventListener("click", () => {
+        this.gameState.cycleSpeed();
+        speedBtn.textContent = `${this.gameState.get('gameSpeed')}x`;
+      });
+    }
+    
+    const gcBtn = document.getElementById("gameControlButton");
+    if (gcBtn) {
+      gcBtn.addEventListener("click", () => {
+        if (!this.gameState.get('gameStarted')) {
+          this.gameState.startGame();
+          gcBtn.textContent = "Pause";
+        } else {
+          this.gameState.togglePause();
+          gcBtn.textContent = this.gameState.get('paused') ? "Resume" : "Pause";
+        }
+      });
+    }
+    
+    // Listen to game state changes
+    this.gameState.on('gameEnded', (data) => {
+      if (data.won) {
+        this.showWinMessage();
+      } else {
+        this.showLoseMessage();
+      }
+    });
   }
 
   start() {
@@ -116,40 +151,35 @@ export class Game {
   }
 
   gameLoop(timestamp) {
-    const delta = (timestamp - this.lastTime) || 0;
-    this.lastTime = timestamp;
-    let deltaSec = delta / 1000;
-    deltaSec *= this.gameSpeed;
+    try {
+      const delta = (timestamp - this.lastTime) || 0;
+      this.lastTime = timestamp;
+      let deltaSec = delta / 1000;
+      deltaSec *= this.gameState.get('gameSpeed');
 
-    if (!this.paused) {
-      // IMPORTANT: Always update hero movement systems first, regardless of game state
-      // Heroes need to be updated first to ensure movement works correctly
-      this.heroManager.update(deltaSec);
-      
-      // Then update gatherController (as a backup movement system)
-      // Always update the gatherController
-      gatherController.update(deltaSec);
-      
-      if (this.gameStarted) {
-        this.waveManager.update(deltaSec);
-        this.enemyManager.update(deltaSec);
+      if (!this.gameState.get('paused') && !this.gameState.get('gameOver')) {
+        // Update movement system first (handles all entity movement)
+        movementSystem.update(deltaSec);
+        
+        // Update heroes
+        this.heroManager.update(deltaSec);
+        
+        // Update game systems based on game state
+        if (this.gameState.get('gameStarted')) {
+          this.waveManager.update(deltaSec);
+          this.enemyManager.update(deltaSec);
+        }
+        
+        // Always update these systems
+        this.towerManager.update(deltaSec);
+        this.projectileManager.update(deltaSec);
       }
-      
-      // Always update these other systems regardless of game started state
-      this.towerManager.update(deltaSec);
-      this.projectileManager.update(deltaSec);
-      
-      // Debug logging
-      if (!this._updateCounter) this._updateCounter = 0;
-      this._updateCounter++;
-      
-      // Log every 60 frames
-      if (this._updateCounter % 60 === 0) {
-        console.log("Game update calling gatherController.update(), gameStarted =", this.gameStarted, "paused =", this.paused);
-      }
+
+      this.draw();
+    } catch (error) {
+      this.handleGameError(error);
     }
-
-    this.draw();
+    
     requestAnimationFrame((ts) => this.gameLoop(ts));
   }
 

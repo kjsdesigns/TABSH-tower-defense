@@ -52,18 +52,24 @@ async function startGameWithGold(startingGold) {
     game.waveManager.waveActive = false;
   }
 
-  game.gameOver = false;
-  game.paused = false;
-  game.gameStarted = false;
+  // Reset game state
+  game.gameState.update({
+    gameOver: false,
+    paused: false,
+    gameStarted: false
+  });
 
   const gcBtn = document.getElementById("gameControlButton");
   if (gcBtn) {
     gcBtn.textContent = "Start";
   }
 
-  game.lives = 20;
-  game.maxLives = 20;
-  game.debugMode = true;
+  // Set initial game values through state management
+  game.gameState.update({
+    lives: 20,
+    maxLives: 20,
+    debugMode: true
+  });
 
   const uiManager = new UIManager(
     game,
@@ -76,7 +82,7 @@ async function startGameWithGold(startingGold) {
   uiManager.initDebugTable();
   game.uiManager = uiManager;
 
-  game.globalEnemyHpMultiplier = enemyHpPercent / 100;
+  game.gameState.set('globalEnemyHpMultiplier', enemyHpPercent / 100);
 
   try {
     const enemyTypes = [
@@ -112,7 +118,7 @@ async function startGameWithGold(startingGold) {
     alert("Failed to load assets: " + assetErr);
   }
 
-  game.gold = startingGold;
+  game.gameState.set('gold', startingGold);
 
   // Load hero from slot
   const activeSlotIndex = localStorage.getItem("kr_activeSlot") || "1";
@@ -174,9 +180,12 @@ async function startGameWithGold(startingGold) {
 
 // Listen for DOM load => init main screen + wire up music controls
 window.addEventListener("load", async () => {
+  console.log("Main.js window load event fired");
   soundManager.init();  // load from localStorage
 
+  console.log("About to call initMainScreen");
   initMainScreen();
+  console.log("initMainScreen called");
 
   const startGoldInput = document.getElementById("startingGoldInput");
   const restartGameButton = document.getElementById("restartGameButton");

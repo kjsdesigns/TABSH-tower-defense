@@ -1,5 +1,5 @@
 import { soundManager } from "./soundManager.js";
-import { gatherController } from "./utils/gatherController.js";
+import { movementSystem } from "./core/MovementSystem.js";
 
 export class UIManager {
   constructor(
@@ -208,14 +208,11 @@ export class UIManager {
           this.selectedHero.y += (dy / dist) * 0.5;
         }
         
-        // Also try to use gatherController as a fallback
-        try {
-          if (window.gatherController) {
-            gatherController.setGatherPoint(this.selectedHero, mx, my);
-          }
-        } catch (err) {
-          console.log("Using direct gather point setting instead of controller");
-        }
+        // Use the movement system to set the gather point
+        movementSystem.setTarget(this.selectedHero, mx, my, {
+          type: 'gather',
+          priority: 1
+        });
         
         // Add gather point target for visual feedback
         this.selectedHero.targetX = mx;

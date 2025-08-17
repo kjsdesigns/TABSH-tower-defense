@@ -1,25 +1,11 @@
 /**
  * assetLoader.js
  *
- * Provides a unified function to load background and enemy images,
- * returning a promise that resolves or rejects if loading fails.
+ * Updated to use the new AssetManager system with fallbacks.
+ * Provides backward compatibility for existing code.
  */
 
-function preloadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = src;
-
-    img.onload = () => {
-      resolve(img);
-    };
-
-    // If an error occurs, we reject with an Error object
-    img.onerror = () => {
-      reject(new Error(`Could not load image: ${src}`));
-    };
-  });
-}
+import { assetManager } from "./core/AssetManager.js";
 
 /**
  * loadAllAssets(enemyTypes, backgroundSrc)
@@ -27,55 +13,67 @@ function preloadImage(src) {
  * - backgroundSrc: string path to background image
  *
  * Returns { loadedEnemies, loadedBackground }
- * or throws if any image fails to load.
+ * Uses AssetManager for robust loading with fallbacks.
  */
 export async function loadAllAssets(enemyTypes, backgroundSrc) {
-  // If the background doesn't start with "assets/", assume it's just a filename
-  // and prepend "assets/maps/" so we load the correct path:
-  let fixedBg = backgroundSrc || "";
-  if (fixedBg && !fixedBg.startsWith("assets/")) {
-    fixedBg = "assets/maps/" + fixedBg;
-  }
-
-  // 1) Preload background
-  const bgPromise = preloadImage(fixedBg);
-
-  // 2) Preload each enemy
-  const enemyPromises = enemyTypes.map(async (type) => {
-    // If type.src lacks "assets/", fix it similarly (in case user only put a filename)
-    let enemySrc = type.src;
-    if (enemySrc && !enemySrc.startsWith("assets/")) {
-      enemySrc = "assets/enemies/" + enemySrc;
+  try {
+    // Fix background path
+    let fixedBg = backgroundSrc || "";
+    if (fixedBg && !fixedBg.startsWith("assets/")) {
+      fixedBg = "assets/maps/" + fixedBg;
     }
 
-    const img = await preloadImage(enemySrc);
-    const maxDim = 30;
-    const scale = maxDim / Math.max(img.naturalWidth, img.naturalHeight);
-    const w = Math.round(img.naturalWidth * scale);
-    const h = Math.round(img.naturalHeight * scale);
+    // Load background using AssetManager
+    const loadedBackground = await assetManager.loadImage(fixedBg, 'background');
+    console.log('Background loaded successfully');
 
-    return {
-      ...type,
-      image: img,
-      width: w,
-      height: h,
-      speed: 40,
-    };
-  });
+    // Load enemies using AssetManager
+    const loadedEnemies = await Promise.all(
+      enemyTypes.map(async (type) => {
+        let enemySrc = type.src;
+        if (enemySrc && !enemySrc.startsWith("assets/")) {
+          enemySrc = "assets/enemies/" + enemySrc;
+        }
 
-  // Wait for everything
-  try {
-    const [loadedBackground, ...loadedEnemies] = await Promise.all([
-      bgPromise,
-      ...enemyPromises,
-    ]);
+        const img = await assetManager.loadImage(enemySrc, 'enemy');
+        
+        // Calculate scaling for display
+        let maxDim = 30;
+        let scale = 1;
+        let w = 30, h = 30;
+        
+        if (img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0) {
+          scale = maxDim / Math.max(img.naturalWidth, img.naturalHeight);
+          w = Math.round(img.naturalWidth * scale);
+          h = Math.round(img.naturalHeight * scale);
+        } else if (img instanceof HTMLCanvasElement) {
+          scale = maxDim / Math.max(img.width, img.height);
+          w = Math.round(img.width * scale);
+          h = Math.round(img.height * scale);
+        }
+
+        return {
+          ...type,
+          image: img,
+          width: w,
+          height: h,
+          speed: 40,
+        };
+      })
+    );
+
+    console.log(`Loaded ${loadedEnemies.length} enemy types successfully`);
 
     return {
       loadedEnemies,
       loadedBackground,
     };
   } catch (err) {
-    // re-throw so main.js can catch & display the specific file that failed
-    throw err;
+    console.error('Asset loading error:', err);
+    // Don't throw - AssetManager provides fallbacks
+    return {
+      loadedEnemies: [],
+      loadedBackground: null
+    };
   }
 }
