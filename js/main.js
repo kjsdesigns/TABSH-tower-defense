@@ -178,6 +178,9 @@ async function startGameWithGold(startingGold) {
   }
 }
 
+// Make initMainScreen globally available
+window.initMainScreen = initMainScreen;
+
 // Listen for DOM load => init main screen + wire up music controls
 window.addEventListener("load", async () => {
   console.log("Main.js window load event fired");

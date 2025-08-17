@@ -21,7 +21,7 @@ export class Router {
     // Register default routes
     this.addRoute('/', () => this.showMainScreen());
     this.addRoute('/level', (params) => this.showLevel(params.get('level')));
-    this.addRoute('/editor', () => this.showEditor());
+    this.addRoute('/editor', (params) => this.showEditor(params.get('tab'), params.get('file')));
     
     // Handle initial page load
     this.handleRoute(window.location.pathname + window.location.search);
@@ -95,7 +95,7 @@ export class Router {
     }
   }
   
-  showEditor() {
+  showEditor(tab = null, file = null) {
     const mainScreen = document.getElementById('mainScreen');
     const gameContainer = document.getElementById('gameContainer');
     const editorHub = document.getElementById('editorHub');
@@ -106,7 +106,7 @@ export class Router {
     
     // Show editor hub if function is available
     if (window.showEditorHub) {
-      window.showEditorHub();
+      window.showEditorHub(tab, file);
     }
   }
   

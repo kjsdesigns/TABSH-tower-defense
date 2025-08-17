@@ -55,8 +55,8 @@ export function hideEditorHub() {
 }
 
 let levelEditorInstance = null;
-function initializeLevelEditor() {
-  console.log("[editorHub] initializeLevelEditor CALLED!");
+function initializeLevelEditor(activeFile = null) {
+  console.log("[editorHub] initializeLevelEditor CALLED with file:", activeFile);
   const levelEditorTab = document.getElementById("levelEditorTab");
   if (!levelEditorTab) {
     console.warn("[editorHub] No #levelEditorTab found in DOM!");
@@ -64,12 +64,24 @@ function initializeLevelEditor() {
   }
   if (!levelEditorInstance) {
     levelEditorInstance = new LevelEditor(levelEditorTab);
+    
+    // Add URL update callback when file is selected
+    levelEditorInstance.onFileSelect = (fileName) => {
+      if (window.router && fileName) {
+        window.router.navigate(`/editor?tab=level&file=${fileName}`, true);
+      }
+    };
+  }
+  
+  // Load specific file if provided
+  if (activeFile && levelEditorInstance.loadExistingFileCallback) {
+    levelEditorInstance.loadExistingFileCallback(activeFile);
   }
 }
 
 let enemyEditorInstance = null;
-function initializeEnemyEditor() {
-  console.log("[editorHub] initializeEnemyEditor CALLED!");
+function initializeEnemyEditor(activeFile = null) {
+  console.log("[editorHub] initializeEnemyEditor CALLED with file:", activeFile);
   const enemyEditorTab = document.getElementById("enemyEditorTab");
   if (!enemyEditorTab) {
     console.warn("[editorHub] No #enemyEditorTab found in DOM!");
@@ -77,12 +89,24 @@ function initializeEnemyEditor() {
   }
   if (!enemyEditorInstance) {
     enemyEditorInstance = new EnemyEditor(enemyEditorTab);
+    
+    // Add URL update callback when file is selected
+    enemyEditorInstance.onFileSelect = (fileName) => {
+      if (window.router && fileName) {
+        window.router.navigate(`/editor?tab=enemy&file=${fileName}`, true);
+      }
+    };
+  }
+  
+  // Load specific file if provided
+  if (activeFile && enemyEditorInstance.loadExistingFileCallback) {
+    enemyEditorInstance.loadExistingFileCallback(activeFile);
   }
 }
 
 let towerEditorInstance = null;
-function initializeTowerEditor() {
-  console.log("[editorHub] initializeTowerEditor CALLED!");
+function initializeTowerEditor(activeFile = null) {
+  console.log("[editorHub] initializeTowerEditor CALLED with file:", activeFile);
   const towerEditorTab = document.getElementById("towerEditorTab");
   if (!towerEditorTab) {
     console.warn("[editorHub] No #towerEditorTab found in DOM!");
@@ -90,12 +114,24 @@ function initializeTowerEditor() {
   }
   if (!towerEditorInstance) {
     towerEditorInstance = new TowerEditor(towerEditorTab);
+    
+    // Add URL update callback when file is selected
+    towerEditorInstance.onFileSelect = (fileName) => {
+      if (window.router && fileName) {
+        window.router.navigate(`/editor?tab=tower&file=${fileName}`, true);
+      }
+    };
+  }
+  
+  // Load specific file if provided
+  if (activeFile && towerEditorInstance.loadExistingFileCallback) {
+    towerEditorInstance.loadExistingFileCallback(activeFile);
   }
 }
 
 let heroEditorInstance = null;
-function initializeHeroEditor() {
-  console.log("[editorHub] initializeHeroEditor CALLED!");
+function initializeHeroEditor(activeFile = null) {
+  console.log("[editorHub] initializeHeroEditor CALLED with file:", activeFile);
   const heroEditorTab = document.getElementById("heroEditorTab");
   if (!heroEditorTab) {
     console.warn("[editorHub] No #heroEditorTab found in DOM!");
@@ -103,6 +139,18 @@ function initializeHeroEditor() {
   }
   if (!heroEditorInstance) {
     heroEditorInstance = new HeroEditor(heroEditorTab);
+    
+    // Add URL update callback when file is selected
+    heroEditorInstance.onFileSelect = (fileName) => {
+      if (window.router && fileName) {
+        window.router.navigate(`/editor?tab=hero&file=${fileName}`, true);
+      }
+    };
+  }
+  
+  // Load specific file if provided
+  if (activeFile && heroEditorInstance.loadExistingFileCallback) {
+    heroEditorInstance.loadExistingFileCallback(activeFile);
   }
 }
 

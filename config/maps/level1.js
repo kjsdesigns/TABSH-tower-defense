@@ -1,5 +1,5 @@
 export const level1Data = {
-  "background": "level1.png",
+  "background": "level1.jpg",
   "heroStart": {
     "x": 776.2717380523682,
     "y": 352.9619445800781
@@ -121,7 +121,7 @@ export const level1Data = {
     }
   ],
   "levelName": "Forest Path",
-  "music": "damatic.mp3",
+  "music": "",
   "waves": [
     {
       "enemyGroups": [
@@ -130,7 +130,7 @@ export const level1Data = {
           "count": 5,
           "spawnInterval": 1500,
           "pathIndex": 0,
-          "hpMultiplier": 1.0
+          "hpMultiplier": 1
         }
       ]
     },
@@ -148,7 +148,7 @@ export const level1Data = {
           "count": 3,
           "spawnInterval": 2000,
           "pathIndex": 1,
-          "hpMultiplier": 1.0
+          "hpMultiplier": 1
         }
       ]
     },
@@ -173,9 +173,11 @@ export const level1Data = {
           "count": 2,
           "spawnInterval": 3000,
           "pathIndex": 0,
-          "hpMultiplier": 1.0
+          "hpMultiplier": 1
         }
       ]
     }
-  ]
+  ],
+  "mapWidth": 800,
+  "mapHeight": 600
 };
