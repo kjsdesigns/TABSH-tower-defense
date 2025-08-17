@@ -85,13 +85,15 @@ export class GameplayCore {
     
     towerTypes.forEach(towerConfig => {
       const button = document.createElement('button');
-      button.textContent = `${towerConfig.name} ($${towerConfig.cost[0]})`;
+      const displayName = towerConfig.name.charAt(0).toUpperCase() + towerConfig.name.slice(1);
+      button.textContent = `${displayName} ($${towerConfig.cost[0]})`;
       button.style.margin = '5px';
       button.style.padding = '8px 12px';
       button.style.border = '2px solid #333';
       button.style.borderRadius = '4px';
       button.style.color = 'white';
       button.style.fontWeight = 'bold';
+      button.style.minWidth = '120px';
       
       // Use same colors as tower rendering
       const towerColors = {

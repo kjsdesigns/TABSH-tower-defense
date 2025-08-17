@@ -173,6 +173,20 @@ export class UIManager {
       const dy = my - tower.y;
       const distFromTower = Math.sqrt(dx * dx + dy * dy);
       
+      // Debug coordinate validation
+      if (isNaN(tower.x) || isNaN(tower.y)) {
+        console.error('Tower coordinates are NaN!', { x: tower.x, y: tower.y });
+        this.isSettingRallyPoint = false;
+        this.rallyTower = null;
+        this.game.canvas.style.cursor = "default";
+        return;
+      }
+      
+      if (isNaN(mx) || isNaN(my)) {
+        console.error('Click coordinates are NaN!', { mx, my });
+        return;
+      }
+      
       if (distFromTower <= range && tower.unitGroup) {
         // Find closest point on enemy paths to the clicked location
         const paths = this.game.levelData?.paths || [];
@@ -185,7 +199,7 @@ export class UIManager {
         console.log(`Setting gather point at closest path point: (${bestPoint.x}, ${bestPoint.y})`);
         tower.unitGroup.setGatherPoint(bestPoint.x, bestPoint.y);
       } else {
-        console.log('Click outside allowable gather point range');
+        console.log(`Click outside allowable gather point range: ${distFromTower.toFixed(1)}px > ${range}px`);
         // Could add audio feedback or visual indicator here
       }
       
@@ -267,7 +281,12 @@ export class UIManager {
     // maybe a spot?
     const spot=this.getTowerSpotAt(mx,my);
     if(spot && !spot.occupied){
-      this.showBuildTowerDialog(spot);
+      // Use GameplayCore for proper tower build dialog
+      if (this.game.gameplayCore) {
+        this.game.gameplayCore.showTowerBuildDialog(spot, { x: mx, y: my });
+      } else {
+        this.showBuildTowerDialog(spot);
+      }
     }
   }
 

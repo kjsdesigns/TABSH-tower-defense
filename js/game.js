@@ -215,8 +215,22 @@ export class Game {
 
   handleCanvasClick(e) {
     const rect = this.canvas.getBoundingClientRect();
+    
+    // Validate event coordinates
+    if (e.clientX === undefined || e.clientY === undefined) {
+      console.warn('Invalid click event - missing clientX/clientY');
+      return;
+    }
+    
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
+    
+    // Validate calculated coordinates
+    if (isNaN(mx) || isNaN(my)) {
+      console.warn('Invalid canvas coordinates calculated', { clientX: e.clientX, clientY: e.clientY, rect });
+      return;
+    }
+    
     if (this.uiManager && this.uiManager.handleCanvasClick) {
       this.uiManager.handleCanvasClick(mx, my, rect);
     }
@@ -283,21 +297,26 @@ export class Game {
     // Draw UI with proper spacing and background to prevent truncation
     this.ctx.save();
     
-    // Semi-transparent background for UI text
-    this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-    this.ctx.fillRect(5, 35, 250, 120);
+    // Semi-transparent background for UI text - positioned away from edge
+    this.ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    this.ctx.fillRect(8, 8, 200, 130);
+    
+    // White border for better visibility
+    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(8, 8, 200, 130);
     
     this.ctx.fillStyle = "white";
     this.ctx.font = "14px Arial";
-    this.ctx.fillText(`Gold: ${this.gameState.get('gold')}`, 10, 50);
-    this.ctx.fillText(`Wave: ${this.waveManager.waveIndex+1}/${this.waveManager.waves.length}`, 10, 70);
-    this.ctx.fillText(`Lives: ${this.gameState.get('lives')}/${this.gameState.get('maxLives')}`, 10, 90);
+    this.ctx.fillText(`Gold: ${this.gameState.get('gold')}`, 15, 30);
+    this.ctx.fillText(`Wave: ${this.waveManager.waveIndex+1}/${this.waveManager.waves.length}`, 15, 50);
+    this.ctx.fillText(`Lives: ${this.gameState.get('lives')}/${this.gameState.get('maxLives')}`, 15, 70);
     
     // Show enemy count for current wave
     const currentWave = this.waveManager.getCurrentWave();
     if (currentWave) {
       const enemyStats = this.waveManager.getCurrentWaveEnemyStats();
-      this.ctx.fillText(`Enemies: ${enemyStats.remaining}/${enemyStats.total}`, 10, 110);
+      this.ctx.fillText(`Enemies: ${enemyStats.remaining}/${enemyStats.total}`, 15, 90);
     }
     
     // Show countdown timer when waiting for next wave
@@ -311,7 +330,7 @@ export class Game {
         const countdownSeconds = Math.ceil(timeRemaining);
         this.ctx.fillStyle = "yellow";
         this.ctx.font = "16px Arial";
-        this.ctx.fillText(`Next wave starts in ${countdownSeconds}`, 10, 130);
+        this.ctx.fillText(`Next wave starts in ${countdownSeconds}`, 15, 110);
       }
     }
     
