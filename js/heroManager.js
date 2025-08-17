@@ -2,6 +2,7 @@ import { MeleeActor } from "./utils/meleeActor.js";
 import { validateRequiredConfig } from "./utils/configValidator.js";
 import { movementSystem } from "./core/MovementSystem.js";
 import { assetManager } from "./core/AssetManager.js";
+import { meleeCombatSystem } from "./core/MeleeCombatSystem.js";
 
 export class Hero extends MeleeActor {
   constructor(config) {
@@ -36,7 +37,10 @@ export class Hero extends MeleeActor {
       stopDistance: 3
     });
     
-    console.log(`Hero ${this.name} created and registered with movement system`);
+    // Register with melee combat system
+    meleeCombatSystem.registerMeleeUnit(this);
+    
+    console.log(`Hero ${this.name} created and registered with movement and combat systems`);
   }
   
   async loadAssets(config) {
@@ -60,7 +64,7 @@ export class Hero extends MeleeActor {
 
   update(deltaSec, game) {
     super.updateMelee(deltaSec, game);
-    // Movement is now handled by MovementSystem in the main game loop
+    // Movement and combat are handled by MovementSystem and MeleeCombatSystem
   }
 
   setGatherPoint(x, y) {
@@ -72,11 +76,8 @@ export class Hero extends MeleeActor {
     
     console.log(`Hero ${this.name} gather point set to (${x}, ${y})`);
     
-    // Use movement system
-    movementSystem.setTarget(this, x, y, {
-      type: 'gather',
-      priority: 1
-    });
+    // Use melee combat system for gather point management
+    meleeCombatSystem.setGatherPoint(this, x, y);
   }
 
   drawHero(ctx, isSelected) {
@@ -149,6 +150,7 @@ export class Hero extends MeleeActor {
   // Clean up when hero is removed
   destroy() {
     movementSystem.unregisterEntity(this);
+    meleeCombatSystem.unregisterMeleeUnit(this);
   }
 }
 

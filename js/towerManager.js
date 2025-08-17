@@ -168,25 +168,36 @@ export class TowerManager {
   createBarracksUnits(tower) {
     const def = this.findTowerConfigByName(tower.type);
     if(!def)return;
+    
+    console.log('Creating barracks units for tower:', tower.type);
+    
     // soldier stats
     const soldierConfig = {
-      maxHp: def.soldierHp||50,
+      hp: def.soldierHp||50,
       damage: def.soldierDmg||10,
       speed: 50,
       attackInterval: def.attackRate||1.2,
       numUnits: def.numUnits||3
     };
-    tower.unitGroup = new TowerUnitGroup(this.game, tower.x, tower.y, soldierConfig, soldierConfig.numUnits);
-
-    // Log out paths and rally point for debugging
-    const paths = (this.game.levelData && this.game.levelData.paths) || [];
-    console.log("[TowerManager] createBarracksUnits - paths:", paths);
-    console.log(`[TowerManager] createBarracksUnits - tower type: ${tower.type}`);
-
-    if (paths.length > 0 && tower.unitGroup) {
-      const rallyPt = this.getClosestPointOnPaths(tower.x, tower.y, paths);
-      console.log("[TowerManager] rallyPt =>", rallyPt);
-      tower.unitGroup.setRallyPoint(rallyPt.x, rallyPt.y);
+    
+    try {
+      tower.unitGroup = new TowerUnitGroup(tower, soldierConfig);
+      console.log('Successfully created unit group with', soldierConfig.numUnits, 'soldiers');
+      
+      // Set default gather point near the tower initially
+      tower.unitGroup.setDefaultGatherPoint();
+      
+      // Then find optimal gather point near enemy paths
+      const paths = (this.game.levelData && this.game.levelData.paths) || [];
+      if (paths.length > 0) {
+        const rallyPt = this.getClosestPointOnPaths(tower.x, tower.y, paths);
+        console.log("[TowerManager] Setting rally point =>", rallyPt);
+        tower.unitGroup.setGatherPoint(rallyPt.x, rallyPt.y);
+      }
+      
+    } catch (error) {
+      console.error('Error creating barracks units:', error);
+      return;
     }
   }
 
@@ -222,6 +233,16 @@ export class TowerManager {
     else if(proj>=1)return {x:p2.x,y:p2.y};
     else {
       return {x:p1.x+proj*vx, y:p1.y+proj*vy};
+    }
+  }
+
+  /**
+   * Create units for a tower (called by GameplayCore)
+   */
+  createUnitsForTower(tower) {
+    if (tower.type === 'barracks tower') {
+      console.log('Creating units for barracks tower');
+      this.createBarracksUnits(tower);
     }
   }
 }

@@ -1,6 +1,7 @@
 import { MeleeActor } from "./utils/meleeActor.js";
 import { movementSystem } from "./core/MovementSystem.js";
 import { assetManager } from "./core/AssetManager.js";
+import { meleeCombatSystem } from "./core/MeleeCombatSystem.js";
 
 /**
  * A specialized soldier for barracks towers
@@ -32,6 +33,9 @@ class Soldier extends MeleeActor {
       type: 'gather',
       stopDistance: 2
     });
+    
+    // Register with melee combat system
+    meleeCombatSystem.registerMeleeUnit(this);
     
     // Load soldier asset
     this.loadAssets();
@@ -88,16 +92,14 @@ class Soldier extends MeleeActor {
   setGatherPoint(x, y) {
     console.log(`Soldier ${this.name} gather point set to (${x}, ${y})`);
     
-    // Use movement system
-    movementSystem.setTarget(this, x, y, {
-      type: 'gather',
-      priority: 1
-    });
+    // Use melee combat system for gather point management
+    meleeCombatSystem.setGatherPoint(this, x, y);
   }
   
   // Clean up when soldier is removed
   destroy() {
     movementSystem.unregisterEntity(this);
+    meleeCombatSystem.unregisterMeleeUnit(this);
   }
 }
 
@@ -142,6 +144,8 @@ export class TowerUnitGroup {
   }
 
   setGatherPoint(x, y) {
+    console.log(`Setting gather point for ${this.soldiers.length} soldiers at (${x}, ${y})`);
+    
     // Set gather points in formation around the target point
     this.soldiers.forEach((soldier, index) => {
       const angle = (index / this.soldiers.length) * Math.PI * 2;
@@ -151,6 +155,17 @@ export class TowerUnitGroup {
       
       soldier.setGatherPoint(x + offsetX, y + offsetY);
     });
+  }
+  
+  // Set default gather point when units are created
+  setDefaultGatherPoint() {
+    if (!this.tower) return;
+    
+    // Default gather point is near the tower
+    const defaultX = this.tower.x + 30;
+    const defaultY = this.tower.y;
+    
+    this.setGatherPoint(defaultX, defaultY);
   }
 
   // Get all living soldiers

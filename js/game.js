@@ -8,6 +8,7 @@ import { gameState } from "./core/GameState.js";
 import { movementSystem } from "./core/MovementSystem.js";
 import { assetManager } from "./core/AssetManager.js";
 import { GameplayCore } from "./core/GameplayCore.js";
+import { meleeCombatSystem } from "./core/MeleeCombatSystem.js";
 
 export class Game {
   constructor(
@@ -169,6 +170,9 @@ export class Game {
       if (!this.gameState.get('paused') && !this.gameState.get('gameOver')) {
         // Update movement system first (handles all entity movement)
         movementSystem.update(deltaSec);
+        
+        // Update melee combat system (Kingdom Rush style engagement)
+        meleeCombatSystem.update(deltaSec, this);
         
         // Update heroes
         this.heroManager.update(deltaSec);
