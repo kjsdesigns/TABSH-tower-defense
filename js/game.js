@@ -264,7 +264,7 @@ export class Game {
     // Draw gather point selection area if in selection mode
     if (this.uiManager && this.uiManager.isSettingRallyPoint && this.uiManager.rallyTower) {
       const tower = this.uiManager.rallyTower;
-      const range = 120; // Allowable gather point range
+      const range = 150; // Allowable gather point range
       
       this.ctx.save();
       this.ctx.strokeStyle = "rgba(173, 216, 230, 0.6)"; // Light blue

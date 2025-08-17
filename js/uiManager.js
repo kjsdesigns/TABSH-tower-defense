@@ -166,7 +166,7 @@ export class UIManager {
     // If setting a rally point for tower
     if(this.isSettingRallyPoint && this.rallyTower){
       const tower = this.rallyTower;
-      const range = 120; // Allowable gather point range
+      const range = 150; // More generous allowable gather point range
       
       // Check if click is within range
       const dx = mx - tower.x;
