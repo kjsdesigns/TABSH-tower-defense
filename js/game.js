@@ -260,8 +260,35 @@ export class Game {
     this.projectileManager.draw(this.ctx);
     this.towerManager.drawTowers(this.ctx);
     this.heroManager.draw(this.ctx);
+    
+    // Draw gather point selection area if in selection mode
+    if (this.uiManager && this.uiManager.isSettingRallyPoint && this.uiManager.rallyTower) {
+      const tower = this.uiManager.rallyTower;
+      const range = 120; // Allowable gather point range
+      
+      this.ctx.save();
+      this.ctx.strokeStyle = "rgba(173, 216, 230, 0.6)"; // Light blue
+      this.ctx.fillStyle = "rgba(173, 216, 230, 0.1)";
+      this.ctx.lineWidth = 3;
+      this.ctx.setLineDash([10, 5]);
+      
+      this.ctx.beginPath();
+      this.ctx.arc(tower.x, tower.y, range, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.stroke();
+      
+      this.ctx.restore();
+    }
 
+    // Draw UI with proper spacing and background to prevent truncation
+    this.ctx.save();
+    
+    // Semi-transparent background for UI text
+    this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    this.ctx.fillRect(5, 35, 250, 120);
+    
     this.ctx.fillStyle = "white";
+    this.ctx.font = "14px Arial";
     this.ctx.fillText(`Gold: ${this.gameState.get('gold')}`, 10, 50);
     this.ctx.fillText(`Wave: ${this.waveManager.waveIndex+1}/${this.waveManager.waves.length}`, 10, 70);
     this.ctx.fillText(`Lives: ${this.gameState.get('lives')}/${this.gameState.get('maxLives')}`, 10, 90);
@@ -285,9 +312,10 @@ export class Game {
         this.ctx.fillStyle = "yellow";
         this.ctx.font = "16px Arial";
         this.ctx.fillText(`Next wave starts in ${countdownSeconds}`, 10, 130);
-        this.ctx.font = "12px Arial"; // Reset font
       }
     }
+    
+    this.ctx.restore();
   }
   
   showWinMessage() {

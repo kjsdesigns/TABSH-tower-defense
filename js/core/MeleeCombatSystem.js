@@ -229,8 +229,25 @@ export class MeleeCombatSystem {
     unit.gatherX = x;
     unit.gatherY = y;
     
-    // If not engaged, immediately move to new gather point
-    if (!unit.isEngaged) {
+    // Kingdom Rush behavior: If gather point is outside engagement range, 
+    // interrupt current combat and move to new gather point
+    if (unit.isEngaged && unit.engagedEnemy) {
+      const dx = x - unit.x;
+      const dy = y - unit.y;
+      const distToNewGather = Math.sqrt(dx * dx + dy * dy);
+      
+      const edx = unit.engagedEnemy.x - x;
+      const edy = unit.engagedEnemy.y - y;
+      const enemyDistFromNewGather = Math.sqrt(edx * edx + edy * edy);
+      
+      // If new gather point is far from current enemy, disengage and move
+      if (enemyDistFromNewGather > unit.engagementRange) {
+        console.log(`${unit.name} disengaging to move to new gather point`);
+        this.disengageUnit(unit);
+        this.returnToGatherPoint(unit);
+      }
+    } else {
+      // If not engaged, immediately move to new gather point
       this.returnToGatherPoint(unit);
     }
   }

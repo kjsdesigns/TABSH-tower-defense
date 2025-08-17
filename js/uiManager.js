@@ -165,10 +165,30 @@ export class UIManager {
 
     // If setting a rally point for tower
     if(this.isSettingRallyPoint && this.rallyTower){
-      if(this.rallyTower.unitGroup){
-        console.log("Setting gather point for barracks tower unit group to", mx, my);
-        this.rallyTower.unitGroup.setGatherPoint(mx, my);
+      const tower = this.rallyTower;
+      const range = 120; // Allowable gather point range
+      
+      // Check if click is within range
+      const dx = mx - tower.x;
+      const dy = my - tower.y;
+      const distFromTower = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distFromTower <= range && tower.unitGroup) {
+        // Find closest point on enemy paths to the clicked location
+        const paths = this.game.levelData?.paths || [];
+        let bestPoint = { x: mx, y: my }; // Default to clicked point
+        
+        if (paths.length > 0) {
+          bestPoint = this.game.towerManager.getClosestPointOnPaths(mx, my, paths);
+        }
+        
+        console.log(`Setting gather point at closest path point: (${bestPoint.x}, ${bestPoint.y})`);
+        tower.unitGroup.setGatherPoint(bestPoint.x, bestPoint.y);
+      } else {
+        console.log('Click outside allowable gather point range');
+        // Could add audio feedback or visual indicator here
       }
+      
       this.isSettingRallyPoint=false;
       this.rallyTower=null;
       this.game.canvas.style.cursor = "default"; // Reset cursor
@@ -326,6 +346,9 @@ export class UIManager {
       if(this.game.gold>=cost){
         this.game.towerManager.upgradeTower(tower);
         this.refreshUpgradeTowerDialog();
+        // Dismiss dialog after upgrade
+        this.upgradeDialog.style.display = "none";
+        this.selectedTower = null;
       }
     };
     

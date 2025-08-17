@@ -111,14 +111,8 @@ export class EnemyManager {
     this.game.enemies = this.game.enemies.filter(e => {
       if (e.dead) return false;
       if (e.x > this.game.width + e.width) {
-        this.game.lives -= 1;
-        if (this.game.lives <= 0) {
-          this.game.lives = 0;
-          this.game.paused = true;
-          if (this.game.uiManager && !this.game.gameOver) {
-            this.game.uiManager.showLoseDialog();
-          }
-        }
+        console.log('Enemy escaped - losing life');
+        this.game.gameState.loseLife(); // This handles game over automatically
         return false;
       }
       return true;

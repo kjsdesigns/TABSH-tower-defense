@@ -139,16 +139,21 @@ export class WaveManager {
             // last wave => victory
             console.log("All waves completed - victory!");
             
-            if (this.game.lives > 0 && !this.game.gameOver && this.game.uiManager) {
-              this.game.paused = true;
-              this.game.uiManager.showWinDialog(this.game.lives, this.game.maxLives);
-  
+            if (this.game.gameState.get('lives') > 0) {
+              // Calculate star rating based on lives remaining
               let starCount = 1;
-              if (this.game.lives >= 18) starCount = 3;
-              else if (this.game.lives >= 10) starCount = 2;
+              const lives = this.game.gameState.get('lives');
+              if (lives >= 18) starCount = 3;
+              else if (lives >= 10) starCount = 2;
   
               const chosenLevel = localStorage.getItem("kr_chosenLevel") || "level1";
               unlockStars(chosenLevel, starCount);
+              
+              // End game with victory
+              this.game.gameState.endGame(true);
+            } else {
+              // No lives remaining - this shouldn't happen since loseLife() handles it
+              this.game.gameState.endGame(false);
             }
           } else {
             console.log(`Preparing next wave ${this.waveIndex+1}...`);
