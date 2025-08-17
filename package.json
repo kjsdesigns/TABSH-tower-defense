@@ -4,8 +4,11 @@
   "description": "I’m working on a tower defense game. I’ll be sending you complete files that make up the game, then requesting changes. Before you recommend changes, evaluate if you’re missing any relevant files and ask me for them (instead of making assumptions). Similarly, if you have a couple ways of making it work, ask me before providing multiple full solutions.",
   "main": "server.js",
   "scripts": {
-    "test": "npx playwright test",
+    "test": "node tests/test-runner.js",
+    "test:unit": "echo \"Unit tests would run here with Jest or similar\"",
+    "test:integration": "npx playwright test tests/integration/",
     "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
     "start": "node server.js"
   },
   "repository": {

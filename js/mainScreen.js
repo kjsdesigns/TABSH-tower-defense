@@ -71,7 +71,9 @@ const editorsButton = document.createElement("button");
 editorsButton.textContent = "Editors";
 editorsButton.style.marginLeft = "15px";
 editorsButton.addEventListener("click", () => {
-if (window.showEditorHub) {
+if (window.router) {
+window.router.navigate('/editor');
+} else if (window.showEditorHub) {
 window.showEditorHub();
 }
 });
@@ -143,7 +145,9 @@ if (level4Btn) {
 const levelEditorBtn = document.getElementById("levelEditorButton");
 if (levelEditorBtn) {
 levelEditorBtn.addEventListener("click", () => {
-if (window.showEditorHub) {
+if (window.router) {
+window.router.navigate('/editor');
+} else if (window.showEditorHub) {
 window.showEditorHub();
 }
 });
@@ -269,7 +273,9 @@ const editorsButton = document.createElement("button");
 editorsButton.textContent = "Editors";
 editorsButton.style.marginLeft = "15px";
 editorsButton.addEventListener("click", () => {
-if (window.showEditorHub) {
+if (window.router) {
+window.router.navigate('/editor');
+} else if (window.showEditorHub) {
 window.showEditorHub();
 }
 });
@@ -289,6 +295,11 @@ updateMainScreenDisplay();
 }
 
 function chooseLevel(levelId) {
+// Use router to navigate to level with URL change
+if (window.router) {
+window.router.navigate(`/level?level=${levelId}`);
+} else {
+// Fallback if router isn't available
 localStorage.setItem("kr_chosenLevel", levelId);
 
 // Hide main screen, show game container
@@ -302,6 +313,7 @@ gameContainer.style.display = "block";
 // Trigger actual game start in main.js
 if (window.startGameFromMainScreen) {
 window.startGameFromMainScreen();
+}
 }
 }
 

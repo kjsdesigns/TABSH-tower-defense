@@ -7,6 +7,7 @@ import { UIManager } from "./uiManager.js";
 import { loadAllAssets } from "./assetLoader.js";
 import { unlockStars, initMainScreen } from "./mainScreen.js";
 import { soundManager } from "./soundManager.js"; // ensure we can call soundManager
+// Router is loaded separately in index.html
 
 let enemyHpPercent = 100;
 let game = null;
@@ -191,12 +192,17 @@ window.addEventListener("load", async () => {
       if (settingsDialog) {
         settingsDialog.style.display = "none";
       }
-      // Hide gameContainer, show mainScreen
-      const mainScreen = document.getElementById("mainScreen");
-      const gameContainer = document.getElementById("gameContainer");
-      if (mainScreen && gameContainer) {
-        mainScreen.style.display = "block";
-        gameContainer.style.display = "none";
+      // Use router to navigate back to main if available
+      if (window.router) {
+        window.router.navigate('/');
+      } else {
+        // Fallback navigation
+        const mainScreen = document.getElementById('mainScreen');
+        const gameContainer = document.getElementById('gameContainer');
+        if (mainScreen && gameContainer) {
+          mainScreen.style.display = 'block';
+          gameContainer.style.display = 'none';
+        }
       }
     });
   }

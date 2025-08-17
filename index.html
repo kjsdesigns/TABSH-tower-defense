@@ -2,14 +2,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" type="text/css" href="css/devTempStyle.css">
+<!-- devTempStyle.css was removed during cleanup -->
 <meta charset="UTF-8">
 <title>My Tower Defense</title>
 <link rel="stylesheet" type="text/css" href="css/style.css">
 <!--
-Moved editorHub.js so it's loaded before mainScreen.js and main.js,
-ensuring showEditorHub/hideEditorHub are defined.
+Load core systems first, then editors, then main application.
 -->
+<script type="module" src="./js/core/GameState.js"></script>
+<script type="module" src="./js/core/MovementSystem.js"></script>
+<script type="module" src="./js/core/AssetManager.js"></script>
+<script type="module" src="./js/router.js"></script>
 <script type="module" src="./js/editors/editorHub.js"></script>
 <script type="module" src="./js/mainScreen.js"></script>
 <script type="module" src="./js/main.js"></script>

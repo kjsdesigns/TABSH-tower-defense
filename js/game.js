@@ -216,4 +216,63 @@ export class Game {
       this.ctx.fillText("Next wave is ready", 10, 110);
     }
   }
+  
+  showWinMessage() {
+    const winMessage = document.getElementById('winMessage');
+    if (winMessage) {
+      winMessage.style.display = 'block';
+    }
+  }
+  
+  showLoseMessage() {
+    const loseMessage = document.getElementById('loseMessage');
+    if (loseMessage) {
+      loseMessage.style.display = 'block';
+    }
+  }
+  
+  // Expose game state getters for compatibility
+  get gameStarted() {
+    return this.gameState.get('gameStarted');
+  }
+  
+  get paused() {
+    return this.gameState.get('paused');
+  }
+  
+  get gameOver() {
+    return this.gameState.get('gameOver');
+  }
+  
+  get gold() {
+    return this.gameState.get('gold');
+  }
+  
+  set gold(value) {
+    this.gameState.set('gold', value);
+  }
+  
+  get lives() {
+    return this.gameState.get('lives');
+  }
+  
+  set lives(value) {
+    this.gameState.set('lives', value);
+  }
+  
+  get debugMode() {
+    return this.gameState.get('debugMode');
+  }
+  
+  set debugMode(value) {
+    this.gameState.set('debugMode', value);
+  }
+  
+  get globalEnemyHpMultiplier() {
+    return this.gameState.get('globalEnemyHpMultiplier');
+  }
+  
+  set globalEnemyHpMultiplier(value) {
+    this.gameState.set('globalEnemyHpMultiplier', value);
+  }
 }

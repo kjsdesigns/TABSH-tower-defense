@@ -42,11 +42,16 @@ export function showEditorHub() {
 }
 
 export function hideEditorHub() {
-  const editorHub = document.getElementById("editorHub");
-  if (editorHub) editorHub.style.display = "none";
+  // Use router if available, otherwise fallback to direct manipulation
+  if (window.router) {
+    window.router.navigate('/');
+  } else {
+    const editorHub = document.getElementById("editorHub");
+    if (editorHub) editorHub.style.display = "none";
 
-  const mainScreen = document.getElementById("mainScreen");
-  if (mainScreen) mainScreen.style.display = "block";
+    const mainScreen = document.getElementById("mainScreen");
+    if (mainScreen) mainScreen.style.display = "block";
+  }
 }
 
 let levelEditorInstance = null;
