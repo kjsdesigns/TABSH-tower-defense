@@ -88,6 +88,19 @@ export class GameplayCore {
       button.textContent = `${towerConfig.name} ($${towerConfig.cost[0]})`;
       button.style.margin = '5px';
       button.style.padding = '8px 12px';
+      button.style.border = '2px solid #333';
+      button.style.borderRadius = '4px';
+      button.style.color = 'white';
+      button.style.fontWeight = 'bold';
+      
+      // Use same colors as tower rendering
+      const towerColors = {
+        'point tower': '#9013fe',    // Purple for single-target
+        'splash tower': '#f5a623',   // Orange for area-of-effect  
+        'barracks tower': '#50e3c2'  // Teal for unit-spawning
+      };
+      
+      button.style.backgroundColor = towerColors[towerConfig.name] || '#666666';
       
       // Check if player can afford tower
       const canAfford = this.game.gameState.get('gold') >= towerConfig.cost[0];
@@ -95,6 +108,7 @@ export class GameplayCore {
       
       if (!canAfford) {
         button.style.opacity = '0.5';
+        button.style.backgroundColor = '#333';
       }
       
       button.addEventListener('click', () => {

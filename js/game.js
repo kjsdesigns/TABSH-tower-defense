@@ -137,13 +137,17 @@ export class Game {
       gcBtn.addEventListener("click", () => {
         if (!this.gameState.get('gameStarted')) {
           this.gameState.startGame();
-          gcBtn.textContent = "Pause";
+          this.updateControlButton();
         } else {
           this.gameState.togglePause();
-          gcBtn.textContent = this.gameState.get('paused') ? "Resume" : "Pause";
+          this.updateControlButton();
         }
       });
     }
+    
+    // Listen for any state changes that affect the control button
+    this.gameState.on('gameStartedChanged', () => this.updateControlButton());
+    this.gameState.on('pausedChanged', () => this.updateControlButton());
     
     // Listen to game state changes
     this.gameState.on('gameEnded', (data) => {
@@ -153,6 +157,19 @@ export class Game {
         this.showLoseMessage();
       }
     });
+  }
+  
+  updateControlButton() {
+    const gcBtn = document.getElementById("gameControlButton");
+    if (!gcBtn) return;
+    
+    if (!this.gameState.get('gameStarted')) {
+      gcBtn.textContent = "Start";
+    } else if (this.gameState.get('paused')) {
+      gcBtn.textContent = "Resume";
+    } else {
+      gcBtn.textContent = "Pause";
+    }
   }
 
   start() {

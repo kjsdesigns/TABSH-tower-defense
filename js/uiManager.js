@@ -57,10 +57,17 @@ export class UIManager {
     if (this.gatherBtn) {
       this.gatherBtn.onclick = () => {
         if (!this.selectedTower) return;
+        console.log('Starting gather point selection mode for tower:', this.selectedTower.type);
         // For a melee tower => "set gather point" 
         this.isSettingRallyPoint = true;
         this.rallyTower = this.selectedTower;
         this.upgradeDialog.style.display = "none";
+        
+        // Visual feedback
+        this.game.canvas.style.cursor = "crosshair";
+        
+        // Show instruction
+        console.log('Click on the map to set new gather point for soldiers');
       };
     }
 
@@ -159,25 +166,12 @@ export class UIManager {
     // If setting a rally point for tower
     if(this.isSettingRallyPoint && this.rallyTower){
       if(this.rallyTower.unitGroup){
-        console.log("Setting rally point for barracks tower unit group to", mx, my);
-        this.rallyTower.unitGroup.setRallyPoint(mx,my);
-        
-        // Visual feedback - add target indicator to the soldier units
-        if (this.rallyTower.unitGroup.units) {
-          this.rallyTower.unitGroup.units.forEach(soldier => {
-            // Calculate soldier-specific target position based on their offset
-            const i = soldier.indexInGroup;
-            const offX = this.rallyTower.unitGroup.offsets[i];
-            
-            // Add target indicator properties
-            soldier.targetX = mx + offX;
-            soldier.targetY = my;
-            soldier.showTarget = true;
-          });
-        }
+        console.log("Setting gather point for barracks tower unit group to", mx, my);
+        this.rallyTower.unitGroup.setGatherPoint(mx, my);
       }
       this.isSettingRallyPoint=false;
       this.rallyTower=null;
+      this.game.canvas.style.cursor = "default"; // Reset cursor
       return;
     }
 
@@ -230,8 +224,15 @@ export class UIManager {
     // did we click a hero?
     const clickedHero=this.game.heroManager.getHeroAt(mx,my);
     if(clickedHero){
+      console.log('Hero selected:', clickedHero.name);
       this.selectedHero=clickedHero;
       this.selectedTower=null;
+      
+      // Ensure game doesn't pause when selecting hero
+      if (this.game.gameState.get('paused')) {
+        console.warn('Game was paused when selecting hero - this should not happen');
+      }
+      
       return;
     }
 

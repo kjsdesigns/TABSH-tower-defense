@@ -41,7 +41,7 @@ export class Hero extends MeleeActor {
     meleeCombatSystem.registerMeleeUnit(this);
     
     // Death and respawn properties
-    this.respawnTime = 5.0; // 5 seconds to respawn
+    this.respawnTime = 20.0; // 20 seconds to respawn
     this.respawnTimer = 0;
     this.deathPosition = null; // Where the hero died
     

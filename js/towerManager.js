@@ -150,11 +150,19 @@ export class TowerManager {
       ctx.strokeStyle="#fff";
       ctx.stroke();
     } else {
-      ctx.fillStyle="darkblue";
+      // Different colors for different tower types
+      const towerColors = {
+        'point tower': '#9013fe',    // Purple for single-target
+        'splash tower': '#f5a623',   // Orange for area-of-effect  
+        'barracks tower': '#50e3c2'  // Teal for unit-spawning
+      };
+      
+      ctx.fillStyle = towerColors[tower.type] || '#666666';
       ctx.beginPath();
       ctx.arc(tower.x, tower.y, 24 + tower.level*4, 0, Math.PI*2);
       ctx.fill();
       ctx.strokeStyle="#fff";
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
     if(this.game.debugMode){
