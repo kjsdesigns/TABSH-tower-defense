@@ -67,11 +67,6 @@ export class WaveManager {
     if (!this.waveActive && this.waveIndex < this.waves.length) {
       this.timeUntilNextWave -= deltaSec;
       
-      // Log countdown every 30 frames
-      if (this._debugCounter % 30 === 0) {
-        console.log(`Time until wave ${this.waveIndex+1}: ${this.timeUntilNextWave.toFixed(2)}s`);
-      }
-      
       if (this.timeUntilNextWave <= 0) {
         console.log(`Starting wave ${this.waveIndex+1} of ${this.waves.length}`);
         this.startWave(this.waveIndex);

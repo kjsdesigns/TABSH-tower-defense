@@ -1,5 +1,5 @@
 export const splashTowerConfig = {
-  "name": "Boom",
+  "name": "splash tower",
   "towerType": "range",
   "cost": [
     110,

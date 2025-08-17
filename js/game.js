@@ -7,6 +7,7 @@ import { soundManager } from "./soundManager.js";
 import { gameState } from "./core/GameState.js";
 import { movementSystem } from "./core/MovementSystem.js";
 import { assetManager } from "./core/AssetManager.js";
+import { GameplayCore } from "./core/GameplayCore.js";
 
 export class Game {
   constructor(
@@ -37,10 +38,14 @@ export class Game {
 
     this.lastTime = 0;
     
+    // Initialize Kingdom Rush gameplay mechanics
+    this.gameplayCore = new GameplayCore(this);
+    this.gameplayCore.initialize();
+    
     // Initialize error handling
     this.errorHandler = this.setupErrorHandling();
     
-    console.log("Game initialized with new core systems");
+    console.log("Game initialized with Kingdom Rush mechanics");
 
     this.setupUI();
     this.canvas.addEventListener("click", (e) => this.handleCanvasClick(e));
@@ -147,6 +152,7 @@ export class Game {
   }
 
   start() {
+    console.log('Game.start() called - starting game loop');
     requestAnimationFrame((ts) => this.gameLoop(ts));
   }
 

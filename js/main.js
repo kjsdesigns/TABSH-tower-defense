@@ -174,7 +174,9 @@ async function startGameWithGold(startingGold) {
     });
   }
 
+  console.log('About to call game.start()');
   game.start();
+  console.log('game.start() completed');
   const currentGameLabel = document.getElementById("currentGameLabel");
   if (currentGameLabel) {
     currentGameLabel.innerHTML = `Current game:<br>Starting gold: ${startingGold}, Enemy HP: ${enemyHpPercent}%`;

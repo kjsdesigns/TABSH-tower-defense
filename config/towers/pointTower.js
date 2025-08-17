@@ -1,5 +1,5 @@
 export const pointTowerConfig = {
-  "name": "Archer tower",
+  "name": "point tower",
   "towerType": "range",
   "cost": [
     80,
