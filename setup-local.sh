@@ -29,23 +29,65 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if Docker is installed
+# Check if Docker is installed and detect runtime
 check_docker() {
     print_status "Checking Docker installation..."
+    
+    # Check basic Docker installation
     if ! command -v docker &> /dev/null; then
         print_error "Docker is not installed. Please install Docker first:"
-        echo "  • macOS: https://docs.docker.com/desktop/install/mac-install/"
+        echo ""
+        echo "🐳 Recommended for macOS:"
+        echo "  brew install colima docker docker-compose"
+        echo "  colima start --cpu 4 --memory 8 --disk 100 --vm-type vz --mount-type virtiofs"
+        echo ""
+        echo "📦 Alternative options:"
+        echo "  • Docker Desktop: https://docs.docker.com/desktop/install/mac-install/"
         echo "  • Linux: https://docs.docker.com/engine/install/"
         echo "  • Windows: https://docs.docker.com/desktop/install/windows-install/"
         exit 1
     fi
     
     if ! command -v docker-compose &> /dev/null; then
-        print_error "docker-compose is not installed. Please install Docker Compose first."
+        print_error "docker-compose is not installed."
+        echo "Install with: brew install docker-compose"
         exit 1
     fi
     
-    print_success "Docker and docker-compose are installed"
+    # Detect Docker runtime
+    DOCKER_RUNTIME="unknown"
+    if command -v colima &> /dev/null && colima status &> /dev/null; then
+        DOCKER_RUNTIME="colima"
+        print_success "Docker with Colima runtime detected"
+        
+        # Check if Colima is using optimal settings
+        COLIMA_STATUS=$(colima status 2>/dev/null || echo "")
+        if echo "$COLIMA_STATUS" | grep -q "vmType.*vz" && echo "$COLIMA_STATUS" | grep -q "mountType.*virtiofs"; then
+            print_success "Colima is using optimal settings (vz + virtiofs)"
+        else
+            print_warning "Colima could be optimized. Consider:"
+            echo "  colima stop"
+            echo "  colima start --cpu 4 --memory 8 --disk 100 --vm-type vz --mount-type virtiofs"
+        fi
+    elif docker context list 2>/dev/null | grep -q "docker-desktop" && docker context list 2>/dev/null | grep -q "\*.*docker-desktop"; then
+        DOCKER_RUNTIME="docker-desktop"
+        print_success "Docker Desktop detected"
+    else
+        print_success "Docker installation detected"
+    fi
+    
+    # Test Docker connectivity
+    if ! docker info &> /dev/null; then
+        print_error "Docker daemon is not running or not accessible"
+        if [ "$DOCKER_RUNTIME" = "colima" ]; then
+            echo "Try: colima start"
+        else
+            echo "Please start your Docker runtime"
+        fi
+        exit 1
+    fi
+    
+    print_success "Docker is running and accessible ($DOCKER_RUNTIME)"
 }
 
 # Check if Node.js is installed (for local development)

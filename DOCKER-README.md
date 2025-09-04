@@ -7,9 +7,10 @@ A modern tower defense game built with vanilla JavaScript and Express.js, featur
 ### Prerequisites
 
 Before starting, ensure you have:
-- **Docker Desktop** installed and running
-- **Git** for cloning repositories
+- **Colima** (recommended) or Docker Desktop for container runtime
+- **Git** for cloning repositories  
 - **Claude Code CLI** for development assistance
+- **Homebrew** (macOS) for package management
 
 ### One-Command Setup
 
@@ -46,6 +47,347 @@ docker-compose up -d
 
 # 4. Verify everything is working
 npm test
+```
+
+## 🖥️ Colima Setup & Best Practices (Recommended for macOS)
+
+### Why Colima over Docker Desktop?
+
+**Colima** is the recommended Docker runtime for this project because:
+- ⚡ **Faster startup** and better resource management
+- 🔒 **More secure** - no daemon running as root
+- 💾 **Lower memory footprint** than Docker Desktop
+- 🆓 **Completely free** with no licensing restrictions
+- 🛠️ **Better integration** with macOS Virtualization Framework
+
+### Complete Colima Setup Guide
+
+#### 1. Install Colima and Dependencies
+
+```bash
+# Install via Homebrew (recommended)
+brew install colima docker docker-compose
+
+# Verify installations
+colima version
+docker --version
+docker-compose --version
+```
+
+#### 2. Configure Colima for Optimal Performance
+
+Create or update your Colima configuration:
+
+```bash
+# Start with optimal settings for development
+colima start --cpu 4 --memory 8 --disk 100 --vm-type vz --mount-type virtiofs
+
+# Or edit configuration file directly
+colima stop
+nano ~/.colima/default/colima.yaml
+```
+
+**Recommended `~/.colima/default/colima.yaml` configuration:**
+
+```yaml
+# Optimal configuration for TABSH development
+cpu: 4                    # Adjust based on your Mac's CPU count
+memory: 8                 # 8GB RAM allocation
+disk: 100                 # 100GB disk space
+arch: aarch64             # ARM64 for Apple Silicon, x86_64 for Intel
+runtime: docker           # Docker runtime
+vmType: vz                # Use macOS Virtualization Framework (faster)
+mountType: virtiofs       # Fastest mount type for vz
+autoActivate: true        # Auto-set as Docker context
+mountInotify: true        # Enable file watching for live reloading
+kubernetes:
+  enabled: false          # Disable K8s for better performance
+network:
+  address: false          # VM networking
+  dns: []                 # Use system DNS
+forwardAgent: false       # SSH agent forwarding
+rosetta: false            # AMD64 emulation (only if needed)
+binfmt: true             # Foreign architecture support
+```
+
+#### 3. Auto-Start Colima on Login (Recommended)
+
+Set up automatic startup so Colima is always ready:
+
+**Create launch agent:**
+```bash
+# Create the launch agent directory if it doesn't exist
+mkdir -p ~/Library/LaunchAgents
+
+# Create the launch script
+sudo mkdir -p /usr/local/libexec/headless
+sudo tee /usr/local/libexec/headless/launch-colima-user.sh > /dev/null << 'EOF'
+#!/bin/bash
+
+# Colima auto-start script for user login
+set -euo pipefail
+
+# Log function for debugging
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> /tmp/colima-user-boot.log
+}
+
+log "Starting Colima user auto-start script"
+
+# Set PATH to include Homebrew binaries
+export PATH="/opt/homebrew/bin:$PATH"
+
+# Wait for system to settle
+sleep 5
+
+# Check if Colima is already running
+if colima status >/dev/null 2>&1; then
+    log "Colima is already running, skipping start"
+    exit 0
+fi
+
+log "Starting Colima as user..."
+
+# Start Colima with optimal settings
+colima start --cpu 4 --memory 8 --disk 100 --vm-type vz --mount-type virtiofs
+
+# Verify startup and set Docker context
+if colima status >/dev/null 2>&1; then
+    log "Colima started successfully"
+    docker context use colima >/dev/null 2>&1 || log "Failed to set Docker context"
+    log "Colima user auto-start completed successfully"
+else
+    log "ERROR: Failed to start Colima"
+    exit 1
+fi
+EOF
+
+# Make the script executable
+sudo chmod +x /usr/local/libexec/headless/launch-colima-user.sh
+
+# Create the launch agent plist
+cat > ~/Library/LaunchAgents/dev.colima.agent.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>dev.colima.agent</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/libexec/headless/launch-colima-user.sh</string>
+    </array>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <false/>
+    
+    <key>StandardOutPath</key>
+    <string>/tmp/colima-agent.out</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/tmp/colima-agent.err</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>%USER_HOME%</string>
+    </dict>
+</dict>
+</plist>
+EOF
+
+# Replace %USER_HOME% with actual home directory
+sed -i '' "s|%USER_HOME%|$HOME|g" ~/Library/LaunchAgents/dev.colima.agent.plist
+
+# Load the launch agent
+launchctl load ~/Library/LaunchAgents/dev.colima.agent.plist
+launchctl start dev.colima.agent
+```
+
+#### 4. Verify Colima Setup
+
+```bash
+# Check Colima status
+colima status
+
+# Verify Docker context
+docker context list
+
+# Test Docker functionality
+docker run hello-world
+
+# Check available resources
+docker system info | grep -E "(CPUs|Total Memory)"
+```
+
+#### 5. Colima Management Commands
+
+```bash
+# Start Colima
+colima start
+
+# Stop Colima  
+colima stop
+
+# Restart Colima
+colima restart
+
+# Check status and resource usage
+colima status
+colima list
+
+# Update Colima configuration
+colima stop
+colima start --cpu 6 --memory 10  # Adjust resources
+
+# SSH into Colima VM (for debugging)
+colima ssh
+
+# Reset Colima (nuclear option)
+colima delete
+colima start --cpu 4 --memory 8 --disk 100 --vm-type vz --mount-type virtiofs
+```
+
+### Colima Performance Optimization
+
+#### Resource Allocation Guidelines
+
+**For Development:**
+```bash
+# Minimum recommended for TABSH
+colima start --cpu 2 --memory 4 --disk 60
+
+# Optimal for active development
+colima start --cpu 4 --memory 8 --disk 100
+
+# High-performance setup (if you have resources)
+colima start --cpu 6 --memory 12 --disk 150
+```
+
+**CPU Allocation:** 
+- Minimum: 2 CPUs
+- Recommended: 4 CPUs (half your Mac's cores)
+- Maximum: Never use all available CPUs
+
+**Memory Allocation:**
+- Minimum: 4GB for basic development
+- Recommended: 8GB for optimal performance
+- Maximum: 75% of your total RAM
+
+**Disk Space:**
+- Minimum: 60GB for basic usage
+- Recommended: 100GB for active development
+- Note: Can only be increased, never decreased
+
+#### Performance Tuning Tips
+
+1. **Use Virtualization Framework (vz):**
+   ```bash
+   # Fastest option for Apple Silicon Macs
+   colima start --vm-type vz --mount-type virtiofs
+   ```
+
+2. **Enable File System Notifications:**
+   ```yaml
+   # In ~/.colima/default/colima.yaml
+   mountInotify: true  # Enables live reloading
+   ```
+
+3. **Optimize for Your Architecture:**
+   ```bash
+   # For Apple Silicon Macs (M1/M2/M3)
+   colima start --arch aarch64 --vm-type vz
+   
+   # For Intel Macs
+   colima start --arch x86_64 --vm-type qemu
+   ```
+
+### Troubleshooting Colima
+
+#### Common Issues and Solutions
+
+**🔧 Colima Won't Start:**
+```bash
+# Check for conflicts
+brew services list | grep -i docker
+# Stop any conflicting services
+brew services stop docker-machine
+
+# Reset Colima
+colima delete
+colima start --cpu 4 --memory 8
+```
+
+**🔧 Docker Commands Fail:**
+```bash
+# Set correct Docker context  
+docker context use colima
+
+# Verify context is active
+docker context list
+```
+
+**🔧 Performance Issues:**
+```bash
+# Check resource usage
+docker system df
+docker system prune -f
+
+# Restart with more resources
+colima stop
+colima start --cpu 6 --memory 10
+```
+
+**🔧 File Watching Not Working:**
+```bash
+# Enable mount notifications
+colima stop
+# Edit ~/.colima/default/colima.yaml
+# Set: mountInotify: true
+colima start
+```
+
+**🔧 Auto-start Not Working:**
+```bash
+# Check launch agent status
+launchctl list | grep colima
+
+# View logs
+tail -f /tmp/colima-user-boot.log
+tail -f /tmp/colima-agent.out
+
+# Reload launch agent
+launchctl unload ~/Library/LaunchAgents/dev.colima.agent.plist
+launchctl load ~/Library/LaunchAgents/dev.colima.agent.plist
+```
+
+### Migration from Docker Desktop
+
+If you're migrating from Docker Desktop:
+
+```bash
+# 1. Stop Docker Desktop
+# (Via GUI: Docker Desktop → Quit Docker Desktop)
+
+# 2. Install and start Colima
+brew install colima docker docker-compose
+colima start --cpu 4 --memory 8 --disk 100 --vm-type vz
+
+# 3. Import existing images (optional)
+docker save $(docker images --format "table {{.Repository}}:{{.Tag}}" | tail -n +2) | \
+colima ssh -- docker load
+
+# 4. Update Docker context
+docker context use colima
+
+# 5. Verify everything works
+docker run hello-world
 ```
 
 ## 🐳 Docker Architecture
@@ -226,33 +568,91 @@ All tests are designed to provide:
 
 ## 🔄 Development Workflow for New Contributors
 
-### Getting Started with Claude Code
+### Getting Started with Claude Code & Colima
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/kjsdesigns/TABSH.git
-   cd TABSH
-   ```
+#### Complete Setup for a New Mac
 
-2. **One-command setup**:
-   ```bash
-   ./setup-local.sh
-   ```
-   
-   If you don't have Node.js installed locally:
-   ```bash
-   ./setup-local.sh --docker-only
-   ```
+**1. Install Prerequisites:**
+```bash
+# Install Homebrew (if not already installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-3. **Verify everything works**:
-   ```bash
-   npm test                # Local infrastructure tests
-   npm run test:docker     # Complete Docker test suite
-   ```
+# Install development tools
+brew install git colima docker docker-compose node
 
-4. **Start developing**:
-   - **Game Application**: http://localhost:4444
-   - **API Endpoints**: http://localhost:4445
+# Verify installations
+git --version
+colima version
+docker --version
+node --version
+```
+
+**2. Set up Colima (Recommended):**
+```bash
+# Start Colima with optimal settings for TABSH
+colima start --cpu 4 --memory 8 --disk 100 --vm-type vz --mount-type virtiofs
+
+# Verify Colima is running
+colima status
+docker context use colima
+docker run hello-world
+```
+
+**3. Clone and Setup TABSH:**
+```bash
+# Clone the repository
+git clone https://github.com/kjsdesigns/TABSH-tower-defense.git
+cd TABSH-tower-defense
+
+# One-command setup (detects Colima automatically)
+./setup-local.sh
+```
+
+**4. Verify Complete Setup:**
+```bash
+# Run comprehensive tests
+npm test                # Local infrastructure tests
+npm run test:docker     # Complete Docker test suite
+
+# Should see: "🏆 COMPLETE TEST SUITE SUCCESS!" with 100% pass rate
+```
+
+**5. Start Developing:**
+- **Game Application**: http://localhost:4444
+- **API Endpoints**: http://localhost:4445
+- **Claude Code**: Ready for AI-assisted development
+
+#### Setup with Auto-Start on Login
+
+For seamless development experience, set up Colima to start automatically:
+
+```bash
+# Run the complete auto-start setup from the Colima section above
+# This ensures Colima starts every time you login to your Mac
+
+# Verify auto-start is working
+launchctl list | grep colima
+tail -f /tmp/colima-user-boot.log
+```
+
+#### Alternative: Docker Desktop Setup
+
+If you prefer Docker Desktop over Colima:
+
+```bash
+# 1. Install Docker Desktop from https://www.docker.com/products/docker-desktop
+
+# 2. Start Docker Desktop and ensure it's running
+
+# 3. Clone and setup TABSH
+git clone https://github.com/kjsdesigns/TABSH-tower-defense.git
+cd TABSH-tower-defense
+./setup-local.sh
+
+# 4. Verify setup
+npm test
+npm run test:docker
+```
 
 ### Using Claude Code for Development
 
@@ -289,6 +689,57 @@ npm run test:docker
 
 ### Common Issues and Solutions
 
+#### Colima-Specific Issues
+
+**🚀 Colima Won't Start After System Restart**:
+```bash
+# Check if auto-start is configured
+launchctl list | grep colima
+
+# If not configured, set up auto-start (see Colima section above)
+# Or manually start
+colima start --cpu 4 --memory 8 --disk 100 --vm-type vz --mount-type virtiofs
+```
+
+**🐳 Docker Context Issues**:
+```bash
+# Check current context
+docker context list
+
+# Switch to Colima context
+docker context use colima
+
+# If context is missing, recreate it
+colima stop && colima start
+```
+
+**⚡ Colima Performance Issues**:
+```bash
+# Check resource usage
+docker system df
+colima status
+
+# Restart with more resources
+colima stop
+colima start --cpu 6 --memory 10 --disk 120
+
+# Clean up unused resources
+docker system prune -f
+```
+
+**📁 File Watching Not Working (Live Reload)**:
+```bash
+# Ensure mount notifications are enabled
+colima stop
+# Edit ~/.colima/default/colima.yaml and set: mountInotify: true
+colima start
+
+# Verify virtiofs is being used
+colima status | grep mountType
+```
+
+#### General Docker Issues
+
 **🔌 Port Conflicts**:
 ```bash
 # Check what's using the ports
@@ -299,14 +750,21 @@ echo -e "WEB_PORT=5444\nAPI_PORT=5445" > .env.local
 docker-compose down && docker-compose up -d
 ```
 
-**🐳 Docker Issues**:
+**🐳 Docker Container Issues**:
 ```bash
-# Complete reset
+# Complete reset (Colima)
 docker-compose down
+colima restart
 docker-compose build --no-cache
 docker-compose up -d
 
-# Check Docker daemon
+# Complete reset (Docker Desktop)
+docker-compose down
+# Restart Docker Desktop
+docker-compose build --no-cache
+docker-compose up -d
+
+# Check Docker daemon status
 docker info
 
 # Clean up Docker resources
