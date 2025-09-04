@@ -1,0 +1,46 @@
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-4444}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3000
+    volumes:
+      # Mount source code for development (can be disabled in production)
+      - .:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/listFiles', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: npm start
+
+  # API service (same as web for now, but separated for future API-only scaling)
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-4445}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/listFiles', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: npm start
+
+volumes:
+  node_modules:
+    driver: local
