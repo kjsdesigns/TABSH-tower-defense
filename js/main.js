@@ -201,14 +201,15 @@ async function startGameWithGold(startingGold) {
 window.initMainScreen = initMainScreen;
 
 // Listen for DOM load => init main screen + wire up music controls
-window.addEventListener("load", async () => {
-  console.log("Main.js window load event fired");
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("Main.js DOMContentLoaded event fired");
   soundManager.init();  // load from localStorage
 
   console.log("About to call initMainScreen");
   initMainScreen();
   console.log("initMainScreen called");
 
+  // Setup UI elements without starting the game automatically
   const startGoldInput = document.getElementById("startingGoldInput");
   const restartGameButton = document.getElementById("restartGameButton");
   const settingsDialog = document.getElementById("settingsDialog");
@@ -309,11 +310,8 @@ window.addEventListener("load", async () => {
     });
   }
 
-  try {
-    await startGameWithGold(parseInt(startGoldInput?.value || "1000"));
-  } catch (err) {
-    console.error("Error on initial game start:", err);
-  }
+  // Don't auto-start game on page load - let user click a level to start
+  console.log("Main screen initialization complete - ready for user interaction");
 
   if (restartGameButton) {
     restartGameButton.addEventListener("click", async () => {
@@ -332,16 +330,17 @@ window.addEventListener("load", async () => {
     });
   }
 
-  // lose/win dialogs
+  // lose/win dialogs with enhanced functionality
   const loseRestartBtn = document.getElementById("loseRestartBtn");
   const loseSettingsBtn = document.getElementById("loseSettingsBtn");
+  const loseMainBtn = document.getElementById("loseMainBtn");
   const winRestartBtn = document.getElementById("winRestartBtn");
   const winSettingsBtn = document.getElementById("winSettingsBtn");
+  const winMainBtn = document.getElementById("winMainBtn");
+  
   if (loseRestartBtn) {
     loseRestartBtn.addEventListener("click", async () => {
-      if (document.getElementById("loseMessage")) {
-        document.getElementById("loseMessage").style.display = "none";
-      }
+      document.getElementById("loseMessage")?.style.setProperty("display", "none");
       try {
         await startGameWithGold(lastStartingGold);
       } catch (err) {
@@ -349,24 +348,37 @@ window.addEventListener("load", async () => {
       }
     });
   }
+  
   if (loseSettingsBtn) {
     loseSettingsBtn.addEventListener("click", () => {
       if (settingsDialog) {
         settingsDialog.style.zIndex = "10001";
-      }
-      if (document.getElementById("loseMessage")) {
-        document.getElementById("loseMessage").style.zIndex = "10000";
-      }
-      if (settingsDialog) {
         settingsDialog.style.display = "block";
+      }
+      const loseMsg = document.getElementById("loseMessage");
+      if (loseMsg) loseMsg.style.zIndex = "10000";
+    });
+  }
+  
+  if (loseMainBtn) {
+    loseMainBtn.addEventListener("click", () => {
+      document.getElementById("loseMessage")?.style.setProperty("display", "none");
+      if (window.router) {
+        window.router.navigate('/');
+      } else {
+        const mainScreen = document.getElementById('mainScreen');
+        const gameContainer = document.getElementById('gameContainer');
+        if (mainScreen && gameContainer) {
+          mainScreen.style.display = 'block';
+          gameContainer.style.display = 'none';
+        }
       }
     });
   }
+  
   if (winRestartBtn) {
     winRestartBtn.addEventListener("click", async () => {
-      if (document.getElementById("winMessage")) {
-        document.getElementById("winMessage").style.display = "none";
-      }
+      document.getElementById("winMessage")?.style.setProperty("display", "none");
       try {
         await startGameWithGold(lastStartingGold);
       } catch (err) {
@@ -374,16 +386,30 @@ window.addEventListener("load", async () => {
       }
     });
   }
+  
   if (winSettingsBtn) {
     winSettingsBtn.addEventListener("click", () => {
       if (settingsDialog) {
         settingsDialog.style.zIndex = "10001";
-      }
-      if (document.getElementById("winMessage")) {
-        document.getElementById("winMessage").style.zIndex = "10000";
-      }
-      if (settingsDialog) {
         settingsDialog.style.display = "block";
+      }
+      const winMsg = document.getElementById("winMessage");
+      if (winMsg) winMsg.style.zIndex = "10000";
+    });
+  }
+  
+  if (winMainBtn) {
+    winMainBtn.addEventListener("click", () => {
+      document.getElementById("winMessage")?.style.setProperty("display", "none");
+      if (window.router) {
+        window.router.navigate('/');
+      } else {
+        const mainScreen = document.getElementById('mainScreen');
+        const gameContainer = document.getElementById('gameContainer');
+        if (mainScreen && gameContainer) {
+          mainScreen.style.display = 'block';
+          gameContainer.style.display = 'none';
+        }
       }
     });
   }

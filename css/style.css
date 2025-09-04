@@ -1,4 +1,11 @@
-/* style.css - updated to reduce inline styles */
+/* =============================================================================
+   TABSH - Tower Defense Game Styles
+   Comprehensive CSS refactor for clean, maintainable styles
+   ============================================================================= */
+
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
 
 body {
   margin: 0;
@@ -9,45 +16,223 @@ body {
   position: relative;
 }
 
-/* Main Screen */
+/* =============================================================================
+   MAIN SCREEN LAYOUT
+   ============================================================================= */
+
 #mainScreen {
   display: block;
   position: relative;
   width: 100%;
-  height: 90vh;
-  background: #222;
-  color: #fff;
-  padding: 10px;
-}
-
-/* Editor Hub */
-#editorHub {
-  display: none;
-  position: relative;
-  width: 100%;
   height: 100vh;
-  background: #111;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   color: #fff;
-}
-
-/* Tab Buttons */
-.editorTabButtons {
-  margin: 10px;
-}
-.editorTabButton {
-  margin-right: 8px;
-  cursor: pointer;
-}
-.editorTabContent {
-  display: none;
-  margin: 10px;
-  background: #222;
   padding: 10px;
-  border: 1px solid #444;
+  overflow: hidden;
 }
 
-/* Bottom-right buttons (placeholder) */
-#bottomRightButtons {
+.slot-buttons-container {
+  margin-bottom: 20px;
+}
+
+.slot-label {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.hero-label {
+  margin-bottom: 15px;
+  font-style: italic;
+}
+
+/* =============================================================================
+   WORLD MAP AND LEVEL MARKERS
+   ============================================================================= */
+
+.world-map-container {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  margin: 20px auto;
+  background-image: url('../assets/world-map.png');
+  background-size: cover;
+  background-position: center;
+  background-color: #4a90e2;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.level-marker {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+}
+
+.level-marker:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.7));
+}
+
+.level-marker.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.level-marker.disabled img {
+  filter: grayscale(100%);
+}
+
+.level-marker-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.level-marker-number {
+  color: white;
+  font-weight: bold;
+  font-size: 12.6px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  pointer-events: none;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.star-display {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.star-icon {
+  height: 11px;
+  width: 11px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
+}
+
+.star-full {
+  background-image: url('../assets/stars/star-full.png');
+}
+
+.star-empty {
+  background-image: url('../assets/stars/star-empty.png');
+}
+
+/* =============================================================================
+   UI BUTTONS AND CONTROLS
+   ============================================================================= */
+
+.btn {
+  padding: 8px 16px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #666;
+  background: #444;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn:hover {
+  background: #555;
+}
+
+.btn:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: #007bff;
+  border-color: #007bff;
+}
+
+.btn.primary:hover {
+  background: #0056b3;
+}
+
+.placeholder-btn {
+  padding: 8px 12px;
+  font-size: 12px;
+  border: 1px solid #666;
+  background: #444;
+  color: white;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.placeholder-btn:hover {
+  background: #555;
+}
+
+.action-button {
+  padding: 8px 12px;
+  margin: 2px;
+  border: 1px solid #666;
+  background: #444;
+  color: white;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.action-button:hover {
+  background: #555;
+}
+
+.level-button {
+  padding: 12px;
+  font-size: 14px;
+  background: #007bff;
+  border: 2px solid #0056b3;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.level-button:hover {
+  background: #0056b3;
+}
+
+.level-button:disabled {
+  background: #666;
+  border-color: #444;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   BOTTOM RIGHT BUTTONS
+   ============================================================================= */
+
+.bottom-right-buttons {
   position: absolute;
   bottom: 20px;
   right: 20px;
@@ -55,125 +240,56 @@ body {
   flex-direction: column;
   gap: 8px;
 }
-.placeholderBtn {
-  padding: 6px 10px;
-  background: #333;
-  border: 1px solid #555;
-  color: #fff;
-  cursor: pointer;
+
+.update-info {
+  color: #ccc;
+  margin-top: 4px;
+  font-size: 0.8em;
 }
 
-/* Dotted line between levels */
-#dottedLine {
-  position: absolute;
-  width: 100px;
-  height: 2px;
-  background: repeating-linear-gradient(
-    to right,
-    #fff 0,
-    #fff 10px,
-    transparent 10px,
-    transparent 20px
-  );
-  top: 250px;
-  left: 330px;
-  transform: rotate(10deg);
-  transform-origin: 0 0;
-  opacity: 0.3;
-}
+/* =============================================================================
+   DIALOG STYLES
+   ============================================================================= */
 
-/* Level buttons */
-.levelButton {
-  width: 120px;
-  height: 120px;
-  border-radius: 60px;
-  text-align: center;
-  vertical-align: middle;
-  line-height: 120px;
-  font-size: 1.2em;
-  cursor: pointer;
-  background: #444;
-  color: #fff;
+.hero-dialog {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 400px;
+  background: rgba(0,0,0,0.85);
   border: 2px solid #999;
-  margin-right: 30px;
-  position: absolute;
-}
-.levelButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  border-radius: 8px;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  padding: 10px;
 }
 
-/* Game Container hidden by default */
-#gameContainer {
-  display: none;
-  position: relative;
-  width: 800px;
-  margin: 0 auto;
-}
-
-/* Top-right game buttons */
-#topButtons {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  gap: 6px;
-}
-
-/* Shared button styles */
-button,
-.actionButton {
-  padding: 6px 10px;
+.dialog-close {
+  float: right;
   cursor: pointer;
-}
-.actionButton {
-  background-color: #800;
-  color: #fff;
-  border: 1px solid #600;
-  font-size: 12px;
-  border-radius: 3px;
-}
-.actionButton:hover {
-  background-color: #a00;
+  margin-bottom: 10px;
 }
 
-/* Canvas styling */
-#gameCanvas {
-  display: block;
-  margin: 0 auto;
-  background-color: #000;
-  border: 2px solid #aaa;
+.hero-choice {
+  margin: 8px 0;
 }
 
-/* Enemy stats panel */
-#enemyStats {
-  display: none;
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background: rgba(0,0,0,0.7);
-  padding: 6px;
-  border: 1px solid #999;
-  border-radius: 3px;
-}
-#enemyImage {
-  max-width: 80px;
-  max-height: 80px;
+.hero-choice button {
+  padding: 10px 15px;
+  width: 100%;
+  background: #444;
+  border: 1px solid #666;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
 }
 
-/* Tower panel */
-#towerSelectPanel {
-  display: none;
-  position: absolute;
-  background: rgba(0,0,0,0.8);
-  border: 1px solid #999;
-  border-radius: 3px;
-  padding: 5px;
-  color: #fff;
+.hero-choice button:hover {
+  background: #555;
 }
 
-/* Settings dialog */
-#settingsDialog {
+.settings-dialog {
   display: none;
   position: fixed;
   top: 50%;
@@ -186,53 +302,353 @@ button,
   z-index: 9999;
   padding: 10px;
 }
-#settingsDialogClose {
-  float: right;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-#settingsHeading {
-  margin: 0;
-  margin-bottom: 10px;
-}
-#settingsDialogContent {
+
+.settings-dialog-content {
   display: flex;
   flex-direction: row;
   gap: 15px;
 }
-#settingsLeftColumn, #settingsRightColumn {
+
+.settings-left-column {
   width: 50%;
   box-sizing: border-box;
 }
-#enemyHpLabel, #startingGoldLabel {
-  font-size: 12px;
+
+.settings-right-column {
+  width: 50%;
+  box-sizing: border-box;
+}
+
+.message-dialog {
+  display: none;
+  text-align: center;
+  font-family: sans-serif;
+  margin-top: 20px;
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #999;
+  padding: 20px;
+  border-radius: 8px;
+  z-index: 9999;
+}
+
+.message-dialog h1 {
+  font-size: 3em;
   margin: 0;
-  padding: 0;
 }
-.enemyHpOption {
-  font-size: 10px;     
-  padding: 3px 2px;    
-  margin-right: 2px;
+
+.win-stars {
+  font-size: 4em;
+  color: gold;
+  margin-top: 10px;
 }
-#debugTableContainer {
+
+/* =============================================================================
+   TOWER DIALOGS
+   ============================================================================= */
+
+.tower-build-dialog {
+  display: none;
+  position: absolute;
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #999;
+  border-radius: 8px;
+  z-index: 10000;
+  padding: 10px;
+  color: #fff;
+}
+
+.tower-build-options {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+}
+
+.tower-upgrade-dialog {
+  display: none;
+  position: absolute;
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #999;
+  border-radius: 8px;
+  z-index: 10000;
+  padding: 10px;
+  color: #fff;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* =============================================================================
+   GAME CONTAINER
+   ============================================================================= */
+
+.game-container {
+  display: none;
+  position: relative;
+}
+
+.game-canvas {
+  border: 1px solid #999;
+  display: block;
+  margin: 0 auto;
+  background-color: #000;
+}
+
+.top-buttons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.enemy-stats {
+  display: none;
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.7);
+  padding: 6px;
+  border: 1px solid #999;
+  border-radius: 3px;
+}
+
+.enemy-image {
+  max-width: 80px;
+  max-height: 80px;
+}
+
+.tower-select-panel {
+  display: none;
+  position: absolute;
+  background: rgba(0,0,0,0.8);
+  border: 1px solid #999;
+  border-radius: 3px;
+  padding: 5px;
+  color: #fff;
+}
+
+/* =============================================================================
+   EDITOR HUB
+   ============================================================================= */
+
+#editorHub {
+  display: none;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: #111;
+  color: #fff;
+}
+
+.editor-hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px;
+}
+
+.editor-tab-buttons {
+  margin: 10px;
+}
+
+.editor-tab-button {
+  margin-right: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  background: #333;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 4px;
+}
+
+.editor-tab-button:hover {
+  background: #444;
+}
+
+.editor-tab-content {
+  display: none;
+  margin: 10px;
+  background: #222;
+  padding: 10px;
+  border: 1px solid #444;
+}
+
+/* =============================================================================
+   MAP EDITOR SPECIFIC STYLES
+   ============================================================================= */
+
+.map-editor-container {
+  padding: 20px;
+}
+
+.map-editor-controls {
+  margin-bottom: 20px;
+}
+
+.map-editor-canvas {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  background-color: #4a90e2;
+  background-image: url('../assets/world-map.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 2px solid #666;
+  border-radius: 8px;
+  margin: 0 auto;
+  overflow: hidden;
+  cursor: grab;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.map-editor-level {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: url('../assets/markers/green-marker.png') center/contain no-repeat;
+  cursor: move;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  z-index: 10;
+  transition: transform 0.1s ease;
+}
+
+.map-editor-level:hover {
+  transform: scale(1.05);
+}
+
+.map-editor-info {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* =============================================================================
+   FORM CONTROLS
+   ============================================================================= */
+
+.enemy-hp-option {
+  padding: 4px 8px;
+  margin: 2px;
+  border: 1px solid #666;
+  background: #555;
+  color: white;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.enemy-hp-option:hover {
+  background: #666;
+}
+
+.small-info-label {
+  font-size: 0.8em;
+  color: #ccc;
+  margin-bottom: 5px;
+}
+
+/* Debug table */
+.debug-table-container {
   margin-top: 0;
   font-size: 0.75em;
 }
-#debugTable {
+
+.debug-table {
   border-collapse: collapse;
   border: 1px solid #999;
   width: 100%;
 }
-#debugTable th, #debugTable td {
+
+.debug-table th, 
+.debug-table td {
   padding: 4px 8px;
   border: 1px solid #666;
 }
-.smallInfoLabel {
-  font-size: 12px;
-  line-height: 1.2em;
+
+/* =============================================================================
+   LEGACY/COMPATIBILITY CLASSES (for existing inline style replacement)
+   ============================================================================= */
+
+/* Maintain compatibility with existing IDs that may have inline styles */
+#bottomRightButtons { /* Keep original ID */
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* Lose/Win messages */
+#gameContainer { /* Keep original ID */
+  display: none;
+  position: relative;
+  width: 800px;
+  margin: 0 auto;
+}
+
+#gameCanvas { /* Keep original ID */
+  border: 2px solid #aaa;
+  display: block;
+  margin: 0 auto;
+  background-color: #000;
+}
+
+#topButtons { /* Keep original ID */
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+#enemyStats { /* Keep original ID */
+  display: none;
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.7);
+  padding: 6px;
+  border: 1px solid #999;
+  border-radius: 3px;
+}
+
+#towerSelectPanel { /* Keep original ID */
+  display: none;
+  position: absolute;
+  background: rgba(0,0,0,0.8);
+  border: 1px solid #999;
+  border-radius: 3px;
+  padding: 5px;
+  color: #fff;
+}
+
+#settingsDialog { /* Keep original ID */
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #999;
+  border-radius: 8px;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  padding: 10px;
+}
+
 #loseMessage,
 #winMessage {
   display: none;
@@ -248,4 +664,163 @@ button,
   padding: 20px;
   border-radius: 8px;
   z-index: 9999;
+}
+
+#towerBuildDialog {
+  display: none;
+  position: absolute;
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #999;
+  border-radius: 8px;
+  z-index: 10000;
+  padding: 10px;
+  color: #fff;
+}
+
+#towerUpgradeDialog {
+  display: none;
+  position: absolute;
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #999;
+  border-radius: 8px;
+  z-index: 10000;
+  padding: 10px;
+  color: #fff;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Backwards compatibility for old class names */
+.levelMarker {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+}
+
+.levelMarker:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.7));
+}
+
+.levelMarker.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.levelMarker.disabled img {
+  filter: grayscale(100%);
+}
+
+.starDisplay {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: gold;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.placeholderBtn {
+  padding: 8px 12px;
+  font-size: 12px;
+  border: 1px solid #666;
+  background: #444;
+  color: white;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.placeholderBtn:hover {
+  background: #555;
+}
+
+.actionButton {
+  padding: 8px 12px;
+  margin: 2px;
+  border: 1px solid #666;
+  background: #444;
+  color: white;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.actionButton:hover {
+  background: #555;
+}
+
+.enemyHpOption {
+  padding: 4px 8px;
+  margin: 2px;
+  border: 1px solid #666;
+  background: #555;
+  color: white;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.enemyHpOption:hover {
+  background: #666;
+}
+
+.smallInfoLabel {
+  font-size: 12px;
+  line-height: 1.2em;
+  color: #ccc;
+  margin-bottom: 5px;
+}
+
+.heroChoice {
+  margin: 8px 0;
+}
+
+.heroChoice button {
+  padding: 10px 15px;
+  width: 100%;
+  background: #444;
+  border: 1px solid #666;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.heroChoice button:hover {
+  background: #555;
+}
+
+.editorTabButtons {
+  margin: 10px;
+}
+
+.editorTabButton {
+  margin-right: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  background: #333;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 4px;
+}
+
+.editorTabButton:hover {
+  background: #444;
+}
+
+.editorTabContent {
+  display: none;
+  margin: 10px;
+  background: #222;
+  padding: 10px;
+  border: 1px solid #444;
 }

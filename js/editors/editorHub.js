@@ -3,6 +3,7 @@
  *
  * Renamed the old "Game Editor" approach back to "Level Editor."
  */
+import { MapEditor } from "./mapEditor.js";
 import { LevelEditor } from "./levelEditor.js";
 import { EnemyEditor } from "./enemyEditor.js";
 import { TowerEditor } from "./towerEditor.js";
@@ -28,7 +29,9 @@ export function showEditorHub() {
         tc.style.display = (tc.id === target) ? "block" : "none";
       });
 
-      if (target === "levelEditorTab") {
+      if (target === "mapEditorTab") {
+        initializeMapEditor();
+      } else if (target === "levelEditorTab") {
         initializeLevelEditor();
       } else if (target === "enemyEditorTab") {
         initializeEnemyEditor();
@@ -51,6 +54,19 @@ export function hideEditorHub() {
 
     const mainScreen = document.getElementById("mainScreen");
     if (mainScreen) mainScreen.style.display = "block";
+  }
+}
+
+let mapEditorInstance = null;
+function initializeMapEditor() {
+  console.log("[editorHub] initializeMapEditor CALLED");
+  const mapEditorTab = document.getElementById("mapEditorTab");
+  if (!mapEditorTab) {
+    console.warn("[editorHub] No #mapEditorTab found in DOM!");
+    return;
+  }
+  if (!mapEditorInstance) {
+    mapEditorInstance = new MapEditor(mapEditorTab);
   }
 }
 

@@ -68,6 +68,20 @@ export class Router {
     if (window.soundManager) {
       window.soundManager.stopMusic();
     }
+    
+    // Hide any open dialogs
+    const winMessage = document.getElementById('winMessage');
+    const loseMessage = document.getElementById('loseMessage');
+    const settingsDialog = document.getElementById('settingsDialog');
+    
+    if (winMessage) winMessage.style.display = 'none';
+    if (loseMessage) loseMessage.style.display = 'none';
+    if (settingsDialog) settingsDialog.style.display = 'none';
+    
+    // Refresh the main screen display to update star ratings
+    if (window.updateMainScreenDisplay) {
+      window.updateMainScreenDisplay();
+    }
   }
   
   showLevel(levelName) {

@@ -1,4 +1,5 @@
 import { unlockStars } from "./mainScreen.js";
+// import { calculateStarRating, saveBestStarRating } from "./utils/starRating.js";
 
 export class WaveManager {
   constructor(game) {
@@ -140,16 +141,21 @@ export class WaveManager {
             console.log("All waves completed - victory!");
             
             if (this.game.gameState.get('lives') > 0) {
-              // Calculate star rating based on lives remaining
-              let starCount = 1;
+              // Calculate star rating (temporary inline implementation)
               const lives = this.game.gameState.get('lives');
+              let starCount = 1;
               if (lives >= 18) starCount = 3;
-              else if (lives >= 10) starCount = 2;
-  
+              else if (lives >= 11) starCount = 2;
+              else if (lives >= 1) starCount = 1;
+              else starCount = 0;
+              
               const chosenLevel = localStorage.getItem("kr_chosenLevel") || "level1";
+              console.log(`Level completed! ${starCount} stars for ${chosenLevel} with ${lives} lives remaining`);
+              
+              // Use the legacy unlock system for compatibility
               unlockStars(chosenLevel, starCount);
               
-              // End game with victory
+              // End game with victory (Game.js will handle showing stars in dialog)
               this.game.gameState.endGame(true);
             } else {
               // No lives remaining - this shouldn't happen since loseLife() handles it
@@ -290,4 +296,5 @@ export class WaveManager {
     
     return allSpawned && noEnemiesRemaining;
   }
+  
 }

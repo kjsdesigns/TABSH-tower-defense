@@ -152,7 +152,15 @@ export class Game {
     // Listen to game state changes
     this.gameState.on('gameEnded', (data) => {
       if (data.won) {
-        this.showWinMessage();
+        // Calculate stars based on lives remaining
+        const lives = this.gameState.get('lives');
+        let starCount = 1;
+        if (lives >= 18) starCount = 3;
+        else if (lives >= 11) starCount = 2;
+        else if (lives >= 1) starCount = 1;
+        else starCount = 0;
+        
+        this.showWinMessage(starCount);
       } else {
         this.showLoseMessage();
       }
@@ -297,26 +305,26 @@ export class Game {
     // Draw UI with proper spacing and background to prevent truncation
     this.ctx.save();
     
-    // Semi-transparent background for UI text - positioned away from edge
+    // Larger semi-transparent background for UI text
     this.ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-    this.ctx.fillRect(8, 8, 200, 130);
+    this.ctx.fillRect(10, 10, 220, 140);
     
     // White border for better visibility
     this.ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
     this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(8, 8, 200, 130);
+    this.ctx.strokeRect(10, 10, 220, 140);
     
     this.ctx.fillStyle = "white";
     this.ctx.font = "14px Arial";
-    this.ctx.fillText(`Gold: ${this.gameState.get('gold')}`, 15, 30);
-    this.ctx.fillText(`Wave: ${this.waveManager.waveIndex+1}/${this.waveManager.waves.length}`, 15, 50);
-    this.ctx.fillText(`Lives: ${this.gameState.get('lives')}/${this.gameState.get('maxLives')}`, 15, 70);
+    this.ctx.fillText(`Gold: ${this.gameState.get('gold')}`, 18, 35);
+    this.ctx.fillText(`Wave: ${this.waveManager.waveIndex+1}/${this.waveManager.waves.length}`, 18, 55);
+    this.ctx.fillText(`Lives: ${this.gameState.get('lives')}/${this.gameState.get('maxLives')}`, 18, 75);
     
     // Show enemy count for current wave
     const currentWave = this.waveManager.getCurrentWave();
     if (currentWave) {
       const enemyStats = this.waveManager.getCurrentWaveEnemyStats();
-      this.ctx.fillText(`Enemies: ${enemyStats.remaining}/${enemyStats.total}`, 15, 90);
+      this.ctx.fillText(`Enemies: ${enemyStats.remaining}/${enemyStats.total}`, 18, 95);
     }
     
     // Show countdown timer when waiting for next wave
@@ -330,14 +338,25 @@ export class Game {
         const countdownSeconds = Math.ceil(timeRemaining);
         this.ctx.fillStyle = "yellow";
         this.ctx.font = "16px Arial";
-        this.ctx.fillText(`Next wave starts in ${countdownSeconds}`, 15, 110);
+        this.ctx.fillText(`Next wave starts in ${countdownSeconds}`, 18, 115);
       }
     }
     
     this.ctx.restore();
   }
   
-  showWinMessage() {
+  showWinMessage(starCount = 0) {
+    // Show stars earned in the win dialog
+    const winStarDisplay = document.getElementById('winStarDisplay');
+    if (winStarDisplay && typeof starCount === 'number') {
+      const stars = [];
+      for (let i = 0; i < 3; i++) {
+        const starClass = i < starCount ? 'star-full' : 'star-empty';
+        stars.push(`<div class="star-icon ${starClass}" style="width: 24px; height: 24px;"></div>`);
+      }
+      winStarDisplay.innerHTML = stars.join('');
+    }
+    
     const winMessage = document.getElementById('winMessage');
     if (winMessage) {
       winMessage.style.display = 'block';

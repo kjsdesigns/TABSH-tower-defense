@@ -3,12 +3,33 @@
  *
  * Controls the "Main Screen" UI, including:
  * - Game slot selection (persisted in localStorage)
- * - Display of level 1 and level 2 (level 2 is locked until >=1 star on level1)
- * - Dotted line between level1 and level2
- * - Placeholders for tower upgrades, heroes, items
+ * - Dynamic level markers with star rating system
+ * - Visual star display (0-3 stars based on performance)
+ * - Placeholders for tower upgrades, heroes, items  
  * - Hero selection (2 heroes: "Melee Hero" & "Archer Hero")
  * - Shows total stars (x/y) in each slot button
  */
+
+// Star display function that always shows 3 star positions
+function updateLevelStarDisplay(levelId, starCount) {
+  const starDisplay = document.getElementById(`${levelId}StarDisplay`);
+  if (!starDisplay) return;
+  
+  // Always show 3 star positions
+  const stars = [];
+  for (let i = 0; i < 3; i++) {
+    if (i < starCount) {
+      stars.push('<div class="star-icon star-full"></div>');
+    } else {
+      stars.push('<div class="star-icon star-empty"></div>');
+    }
+  }
+  
+  starDisplay.innerHTML = stars.join('');
+}
+
+// Make star display function globally available
+window.updateLevelStarDisplay = updateLevelStarDisplay;
 
 const MAX_SLOTS = 3;
 
@@ -50,11 +71,97 @@ function computeTotalStars(slotData) {
 
 /**
  * computeMaxStars()
- * Hard-coded to 12 for now (assuming 4 levels with max 3 stars each).
- * Adjust if you add more levels or change max stars per level.
+ * Calculate based on number of levels (3 stars max per level).
  */
 function computeMaxStars() {
-  return 12;
+  try {
+    const savedPositions = localStorage.getItem('mapEditor_levelPositions');
+    const positions = savedPositions ? JSON.parse(savedPositions) : getDefaultPositions();
+    return positions.length * 3; // 3 stars max per level
+  } catch (error) {
+    return 12; // Fallback to default
+  }
+}
+
+/**
+ * Initialize level markers dynamically based on Map Editor data
+ */
+function initializeLevelMarkers() {
+  const worldMapContainer = document.getElementById("worldMapContainer");
+  if (!worldMapContainer) {
+    console.error("worldMapContainer not found!");
+    return;
+  }
+  
+  // Clear existing markers  
+  const existingMarkers = worldMapContainer.querySelectorAll('.level-marker, .levelMarker');
+  existingMarkers.forEach(marker => marker.remove());
+  
+  // Load positions from Map Editor
+  try {
+    const savedPositions = localStorage.getItem('mapEditor_levelPositions');
+    const positions = savedPositions ? JSON.parse(savedPositions) : getDefaultPositions();
+    
+    positions.forEach(pos => {
+      createLevelMarker(pos.id, pos.x, pos.y, worldMapContainer);
+    });
+    
+  } catch (error) {
+    console.error('Error initializing level markers:', error);
+    // Fall back to default positions
+    const defaultPositions = getDefaultPositions();
+    defaultPositions.forEach(pos => {
+      createLevelMarker(pos.id, pos.x, pos.y, worldMapContainer);
+    });
+  }
+}
+
+/**
+ * Create a level marker element using CSS classes
+ */
+function createLevelMarker(levelId, x, y, container) {
+  const marker = document.createElement('div');
+  marker.id = `level${levelId}Marker`;
+  marker.className = 'level-marker levelMarker';
+  marker.dataset.level = `level${levelId}`;
+  // Only set position coordinates inline (dynamic data)
+  marker.style.left = x + 'px';
+  marker.style.top = y + 'px';
+  
+  const img = document.createElement('img');
+  img.id = `level${levelId}MarkerImg`;
+  img.className = 'level-marker-image';
+  img.src = 'assets/markers/green-marker.png';
+  img.alt = `Level ${levelId}`;
+  
+  // Add level number overlay
+  const levelNumber = document.createElement('div');
+  levelNumber.className = 'level-marker-number';
+  levelNumber.textContent = levelId;
+  
+  const starDisplay = document.createElement('div');
+  starDisplay.id = `level${levelId}StarDisplay`;
+  starDisplay.className = 'star-display';
+  
+  marker.appendChild(img);
+  marker.appendChild(levelNumber);
+  marker.appendChild(starDisplay);
+  container.appendChild(marker);
+  
+  // Add click event listener
+  marker.addEventListener('click', () => chooseLevel(`level${levelId}`));
+}
+
+/**
+ * Get default level positions
+ */
+function getDefaultPositions() {
+  return [
+    { id: 1, x: 80, y: 480 },   // Bottom left (treehouse)
+    { id: 2, x: 280, y: 400 },  // Middle bottom (village)
+    { id: 3, x: 520, y: 280 },  // Middle right (mountains)
+    { id: 4, x: 680, y: 80 }    // Top right (castle)
+  ];
 }
 
 // ----------- PUBLIC API -----------
@@ -126,24 +233,7 @@ export function initMainScreen() {
     archerHeroBtn.addEventListener("click", () => setSelectedHero("archer"));
   }
 
-  // Level buttons
-  const level1Btn = document.getElementById("level1Btn");
-  const level2Btn = document.getElementById("level2Btn");
-  const level3Btn = document.getElementById("level3Btn");
-  const level4Btn = document.getElementById("level4Btn");
-  
-  if (level1Btn) {
-    level1Btn.addEventListener("click", () => chooseLevel("level1"));
-  }
-  if (level2Btn) {
-    level2Btn.addEventListener("click", () => chooseLevel("level2"));
-  }
-  if (level3Btn) {
-    level3Btn.addEventListener("click", () => chooseLevel("level3"));
-  }
-  if (level4Btn) {
-    level4Btn.addEventListener("click", () => chooseLevel("level4"));
-  }
+  // Level markers are now created dynamically in initializeLevelMarkers()
 
   // "Game Editor" button
   const levelEditorBtn = document.getElementById("levelEditorButton");
@@ -157,11 +247,17 @@ export function initMainScreen() {
     });
   }
 
+  // Initialize level markers dynamically
+  initializeLevelMarkers();
+  
   // Initial UI update
   updateMainScreenDisplay();
   // Also show update info (unique hash, date/time)
   showUpdateInfo();
 }
+
+// Make updateMainScreenDisplay globally available for router
+window.updateMainScreenDisplay = updateMainScreenDisplay;
 
 export function unlockStars(levelId, starCount) {
   const slotIndex = localStorage.getItem("kr_activeSlot") || "1";
@@ -169,8 +265,11 @@ export function unlockStars(levelId, starCount) {
   const oldStars = slotData.currentStars[levelId] || 0;
   if (starCount > oldStars) {
     slotData.currentStars[levelId] = starCount;
+    saveSlotData(slotIndex, slotData);
+    
+    // Update visual star display immediately
+    updateLevelStarDisplay(levelId, starCount);
   }
-  saveSlotData(slotIndex, slotData);
   updateMainScreenDisplay();
 }
 
@@ -188,68 +287,8 @@ function updateMainScreenDisplay() {
     currentSlotLabel.textContent = "Current Slot: " + slotIndex;
   }
 
-  // Show star counts for each level
-  const level1Stars = slotData.currentStars["level1"] || 0;
-  const level2Stars = slotData.currentStars["level2"] || 0;
-  const level3Stars = slotData.currentStars["level3"] || 0;
-  const level4Stars = slotData.currentStars["level4"] || 0;
-  
-  const level1StarDisplay = document.getElementById("level1StarDisplay");
-  const level2StarDisplay = document.getElementById("level2StarDisplay");
-  const level3StarDisplay = document.getElementById("level3StarDisplay");
-  const level4StarDisplay = document.getElementById("level4StarDisplay");
-  
-  if (level1StarDisplay) {
-    level1StarDisplay.textContent = "Stars: " + level1Stars;
-  }
-  if (level2StarDisplay) {
-    level2StarDisplay.textContent = "Stars: " + level2Stars;
-  }
-  if (level3StarDisplay) {
-    level3StarDisplay.textContent = "Stars: " + level3Stars;
-  }
-  if (level4StarDisplay) {
-    level4StarDisplay.textContent = "Stars: " + level4Stars;
-  }
-
-  // Lock/unlock level 2 if level1Stars >= 1
-  const level2Btn = document.getElementById("level2Btn");
-  const dottedLineElem = document.getElementById("dottedLine");
-  if (level2Btn && dottedLineElem) {
-    if (level1Stars >= 1) {
-      level2Btn.disabled = false;
-      dottedLineElem.style.opacity = "1";
-    } else {
-      level2Btn.disabled = true;
-      dottedLineElem.style.opacity = "0.3";
-    }
-  }
-
-  // Lock/unlock level 3 if level2Stars >= 1
-  const level3Btn = document.getElementById("level3Btn");
-  const dottedLine2to3 = document.getElementById("dottedLine2to3");
-  if (level3Btn && dottedLine2to3) {
-    if (level2Stars >= 1) {
-      level3Btn.disabled = false;
-      dottedLine2to3.style.opacity = "1";
-    } else {
-      level3Btn.disabled = true;
-      dottedLine2to3.style.opacity = "0.3";
-    }
-  }
-
-  // Lock/unlock level 4 if level3Stars >= 1
-  const level4Btn = document.getElementById("level4Btn");
-  const dottedLine3to4 = document.getElementById("dottedLine3to4");
-  if (level4Btn && dottedLine3to4) {
-    if (level3Stars >= 1) {
-      level4Btn.disabled = false;
-      dottedLine3to4.style.opacity = "1";
-    } else {
-      level4Btn.disabled = true;
-      dottedLine3to4.style.opacity = "0.3";
-    }
-  }
+  // Update all dynamic level markers
+  updateAllLevelMarkers(slotData);
 
   // Show selected hero
   const selectedHeroLabel = document.getElementById("selectedHeroLabel");
@@ -303,7 +342,80 @@ function setSelectedHero(heroType) {
   updateMainScreenDisplay();
 }
 
+/**
+ * Update all level markers dynamically
+ */
+function updateAllLevelMarkers(slotData) {
+  try {
+    const savedPositions = localStorage.getItem('mapEditor_levelPositions');
+    const positions = savedPositions ? JSON.parse(savedPositions) : getDefaultPositions();
+    
+    positions.forEach((pos, index) => {
+      const levelKey = `level${pos.id}`;
+      const starCount = slotData.currentStars[levelKey] || 0;
+      
+      // Determine if level is unlocked (level 1 is always unlocked)
+      let isUnlocked = pos.id === 1;
+      if (pos.id > 1) {
+        const prevLevelKey = `level${pos.id - 1}`;
+        const prevStars = slotData.currentStars[prevLevelKey] || 0;
+        isUnlocked = prevStars >= 1;
+      }
+      
+      updateLevelMarker(levelKey, starCount, isUnlocked);
+      
+      // Update visual star display
+      updateLevelStarDisplay(`level${pos.id}`, starCount);
+    });
+    
+  } catch (error) {
+    console.warn('Error updating level markers:', error);
+  }
+}
+
+/**
+ * Update a level marker's appearance based on completion status
+ * @param {string} levelId - The level identifier (e.g., "level1")
+ * @param {number} starCount - Number of stars earned for this level
+ * @param {boolean} isUnlocked - Whether this level is unlocked/available
+ */
+function updateLevelMarker(levelId, starCount, isUnlocked) {
+  const marker = document.getElementById(`${levelId}Marker`);
+  const markerImg = document.getElementById(`${levelId}MarkerImg`);
+  
+  if (!marker || !markerImg) return;
+  
+  // Remove existing state classes
+  marker.classList.remove('disabled');
+  
+  if (!isUnlocked) {
+    // Level is locked - show as disabled with grayscale
+    marker.classList.add('disabled');
+    return;
+  }
+  
+  // Determine marker color based on completion status
+  let markerColor;
+  if (starCount > 0) {
+    // Completed level - use blue marker
+    markerColor = 'blue';
+  } else {
+    // Available but not completed - use green marker
+    markerColor = 'green';
+  }
+  
+  // Update the marker image
+  markerImg.src = `assets/markers/${markerColor}-marker.png`;
+}
+
 function chooseLevel(levelId) {
+  // Check if level is available
+  const marker = document.getElementById(`${levelId}Marker`);
+  if (marker && marker.classList.contains('disabled')) {
+    console.log(`Level ${levelId} is locked`);
+    return; // Don't allow navigation to locked levels
+  }
+  
   localStorage.setItem("kr_chosenLevel", levelId);
 
   // Use router navigation if available
